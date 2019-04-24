@@ -55,10 +55,5 @@
 {% endblock content %}
 
 {% block extra_js %}
-    <script>
-        window.mediaPlayers = JSON.parse('{{ media_players|safe }}');
-        window.hassUrl = '{{ hass_url }}';
-        window.hassAccessToken = '{{ hass_access_token }}';
-    </script>
     <script src="{{ url_for('static', filename='javascript/music.js') }}"></script>
 {% endblock extra_js %}

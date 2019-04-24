@@ -42,7 +42,11 @@ function scrollElement(elem) {
 
 function getActivePlayer() {
     return new Promise((resolve, reject) => {
-        window.mediaPlayers.some(player => {
+        let activePlayer = undefined;
+        let returnCount = 0;
+
+
+        window.mediaPlayers.forEach(player => {
             $.ajax({
                 url: `${hassUrl}/api/states/${player}`,
                 type: 'GET',
@@ -52,30 +56,58 @@ function getActivePlayer() {
                 contentType: 'application/json',
                 data: {},
                 success: (state) => {
-                    if (state['state'] !== 'off' && state['state'] !== 'idle'){
-                        resolve(state)
+                    returnCount++;
+                    if (state['state'] !== 'off' && state['state'] !== 'idle') {
+                        activePlayer = state;
                     }
                 },
                 error: (err) => {
+                    returnCount++;
+
                     console.log(`Error: ${JSON.stringify(err)}`); // TODO make this better
+                    reject();
                 }
             });
         });
+
+        if (returnCount === window.mediaPlayers.length) {
+            console.log('Best case');
+            resolve(activePlayer);
+        }
+
+        const responseChecker = setInterval(() => {
+            if (returnCount === window.mediaPlayers.length) {
+                clearInterval(responseChecker);
+                console.log('resolving');
+                resolve(activePlayer);
+            } else {
+                console.log(`${returnCount} returned, waiting...`);
+            }
+        }, 250);
     });
 }
 
 function updateState() {
     getActivePlayer()
         .then((activePlayer) => {
-            if (mediaPlayers[0] !== activePlayer['entity_id']) {
-                array_move(
-                    mediaPlayers,
-                    window.mediaPlayers.indexOf(activePlayer['entity_id']),
-                    0
-                );
+            if (activePlayer) {
+                // console.log('there is an active player');
+                if (mediaPlayers[0] !== activePlayer['entity_id']) {
+                    array_move(
+                        mediaPlayers,
+                        window.mediaPlayers.indexOf(activePlayer['entity_id']),
+                        0
+                    );
+                }
+
+                updateGUI(activePlayer);
+            } else {
+                console.log('there are no active players');
+                clearInterval(updateTimer);
+                window.location.href = '/no_content';
+                checkAllContent();
             }
 
-            updateGUI(activePlayer);
         })
         .catch((err) => {
             console.log(err);
@@ -107,11 +139,6 @@ function updateGUI(activePlayer) {
                 break;
             default:
                 break;
-        }
-
-
-        if (activePlayer['state'] === 'playing') {
-
         }
 
         let mediaProgress = 100 * estimatedPosition / activePlayer['attributes']['media_duration'];
@@ -156,9 +183,10 @@ function updateGUI(activePlayer) {
 
 updateState();
 
-setInterval(() => {
+const updateTimer = setInterval(() => {
+    console.log('');
     updateState()
-}, updateDelay);
+;}, updateDelay);
 
 setTimeout(() => {
     scrollElement($('#title'));
