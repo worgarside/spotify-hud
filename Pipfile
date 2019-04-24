@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+python-dotenv = "*"
+requests = "*"
+flask = "*"
+jinja2 = "*"
+flask-scss = "*"
+
+[requires]
+python_version = "3.7"
+
+[scripts]
+server = "pipenv run python -m flask run --host 0.0.0.0"
+open = "chromium-browser -kiosk --disable-session-crashed-bubble --disable-infobars --incognito 127.0.0.1:5000/no-content"
