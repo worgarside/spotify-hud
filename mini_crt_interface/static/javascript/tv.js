@@ -22,7 +22,6 @@ function getActivePlayer() {
 }
 
 function updateGUI(activeContent) {
-
     $('.artwork').attr('src', activeContent['artwork']);
     $('.title.title__primary').text(activeContent['title']);
     if (activeContent['show']) {

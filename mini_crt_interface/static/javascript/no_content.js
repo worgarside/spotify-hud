@@ -2,56 +2,44 @@ let timeInSeconds = 91;
 
 function checkMusicPlaying() {
     return new Promise((resolve, reject) => {
-        let resolutionValue = false;
-        let criticalError = false;
-        let returnCount = 0;
-
-        window.mediaPlayers.forEach(player => {
-            $.ajax({
-                url: `${hassUrl}/api/states/${player}`,
-                type: 'GET',
-                beforeSend: xhr => {
-                    xhr.setRequestHeader('Authorization', `Bearer ${hassAccessToken}`);
-                },
-                contentType: 'application/json',
-                data: {},
-                success: (state) => {
-                    returnCount++;
-                    if (state['state'] !== 'off' && state['state'] !== 'idle') {
-                        resolutionValue = 'music';
-                    }
-                },
-                error: (err) => {
-                    criticalError = true;
-                    reject(err);
+        $.ajax({
+            url: '/api/music',
+            type: 'GET',
+            contentType: 'application/json',
+            data: {},
+            success: (response) => {
+                if (response) {
+                    resolve(response);
+                } else {
+                    reject();
                 }
-            });
+            },
+            error: (err) => {
+                console.log(`Error: ${JSON.stringify(err)}`);
+            }
         });
-
-        if (!criticalError) {
-            if (returnCount === window.mediaPlayers.length) resolve(resolutionValue);
-
-
-            const responseChecker = setInterval(() => {
-                if (returnCount === window.mediaPlayers.length) {
-                    clearInterval(responseChecker);
-                    resolve(resolutionValue);
-                }
-            }, 250);
-        }
-    })
+    });
 }
 
 function checkTvPlaying() {
     return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('tv');
-        }, 3000);
-    })
-}
-
-function str_pad_left(string, pad, length) {
-    return (new Array(length + 1).join(pad) + string).slice(-length);
+        $.ajax({
+            url: '/api/tv',
+            type: 'GET',
+            contentType: 'application/json',
+            data: {},
+            success: (response) => {
+                if (response && !response.hasOwnProperty('error')) {
+                    resolve(response);
+                } else {
+                    reject();
+                }
+            },
+            error: (err) => {
+                console.log(`Error: ${JSON.stringify(err)}`);
+            }
+        });
+    });
 }
 
 function get_endpoint(endpoint) {
@@ -66,24 +54,37 @@ function get_endpoint(endpoint) {
             console.log(`Error: ${JSON.stringify(err)}`);
         }
     });
-
 }
 
+function str_pad_left(string, pad, length) {
+    return (new Array(length + 1).join(pad) + string).slice(-length);
+}
 
 setInterval(() => {
     timeInSeconds--;
-    let displayMinutes = Math.floor(timeInSeconds / 60);
-    let displaySeconds = timeInSeconds % 60;
 
-    $('.warning-countdown__clock').text(`${str_pad_left(displayMinutes, '0', 2)}:${str_pad_left(displaySeconds, '0', 2)}`);
+    if (timeInSeconds > 0) {
+
+        let displayMinutes = Math.floor(timeInSeconds / 60);
+        let displaySeconds = timeInSeconds % 60;
+
+        $('.warning-countdown__clock').text(`${str_pad_left(displayMinutes, '0', 2)}:${str_pad_left(displaySeconds, '0', 2)}`);
+    }
 
     if (timeInSeconds % 5 === 0) {
-        Promise.all([checkMusicPlaying(), checkTvPlaying()])
-            .then(values => {
-                console.log(values);
+        checkMusicPlaying()
+            .then(() => {
+                get_endpoint('/crt_on');
+                window.location.href = '/music';
             })
-            .catch(err => {
-                console.log(err);
+            .catch(() => {
+                checkTvPlaying()
+                    .then(() => {
+                        get_endpoint('/crt_on');
+                        window.location.href = '/tv';
+                    })
+                    .catch(() => {
+                    })
             });
     }
 
