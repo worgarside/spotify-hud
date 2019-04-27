@@ -1,5 +1,6 @@
 const updateDelay = 2500;
 let allowScroll = true;
+let updateTimer;
 
 function scrollElement(elem) {
     const elemWidth = $(elem).width();
@@ -28,3 +29,28 @@ function scrollElement(elem) {
         )
     }
 }
+
+function updateState() {
+    getActivePlayer()
+        .then((activeContent) => {
+            updateGUI(activeContent);
+        })
+        .catch((err) => {
+            console.log(err);
+            clearInterval(updateTimer);
+            window.location.href = '/no_content';
+        });
+}
+
+$(() => {
+    updateTimer = setInterval(() => {
+        console.log('');
+        updateState();
+    }, updateDelay);
+
+    setTimeout(() => {
+        scrollElement($('.title.title__primary'));
+    }, updateDelay);
+
+    updateState();
+});

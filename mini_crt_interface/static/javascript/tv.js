@@ -21,20 +21,9 @@ function getActivePlayer() {
     });
 }
 
-function updateState() {
-    getActivePlayer()
-        .then((activeContent) => {
-            updateGUI(activeContent);
-        })
-        .catch(() => {
-            clearInterval(updateTimer);
-            window.location.href = '/no_content';
-        });
-}
-
 function updateGUI(activeContent) {
 
-    $('.artwork.artwork__tv').attr('src', activeContent['art']);
+    $('.artwork').attr('src', activeContent['artwork']);
     $('.title.title__primary').text(activeContent['title']);
     if (activeContent['show']) {
         $('.title.title__secondary').text(`${activeContent['show']} - S${activeContent['season']}E${activeContent['episode']}`);
@@ -58,14 +47,3 @@ function updateGUI(activeContent) {
             break;
     }
 }
-
-updateState();
-
-const updateTimer = setInterval(() => {
-    console.log('');
-    updateState();
-}, updateDelay);
-
-setTimeout(() => {
-    scrollElement($('.title.title__primary'));
-}, updateDelay);

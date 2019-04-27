@@ -4,7 +4,7 @@ from os import getenv
 from json import dumps
 from flask_scss import Scss
 from pigpio import pi as rasp_pi, OUTPUT
-from .api import get_tv_metadata
+from .api import get_tv_metadata, get_music_metadata
 
 load_dotenv()
 
@@ -37,6 +37,11 @@ def index():
 @app.route('/api/tv')
 def api_tv():
     return jsonify(get_tv_metadata())
+
+
+@app.route('/api/music')
+def api_music():
+    return jsonify(get_music_metadata())
 
 
 @app.route('/no-content')

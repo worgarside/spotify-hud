@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 
 
 def get_tv_metadata():
+    # TODO add casting check etc. from HAss
     return check_plex()
 
 
@@ -50,6 +51,9 @@ def check_plex():
             timeout=5
         )
 
+        if not res.status_code == 200:
+            continue
+
         soup = BeautifulSoup(res.content.decode(), 'html.parser')
         videos = soup.findAll('video')
         tv_video = get_tv_video()
@@ -78,10 +82,44 @@ def check_plex():
         return {'error': 'Unknown video type', 'data': tv_video['type'], 'type': 'error'}
 
     metadata['X-Plex-Token'] = server['x-plex-token']
-    metadata['art'] = f"http://{server['host']}:{server['port']}{tv_video['art']}?X-Plex-Token={server['x-plex-token']}"
+    metadata['artwork'] = f"http://{server['host']}:{server['port']}{tv_video['art']}" \
+        f"?X-Plex-Token={server['x-plex-token']}"
     metadata['type'] = tv_video['type']
     metadata['title'] = tv_video['title']
     metadata['state'] = tv_video['state']
+
+    return metadata
+
+
+def get_music_metadata():
+    media_players = getenv('MEDIA_PLAYERS').split()
+    hass_endpoint = f"http://{getenv('HASS_HOST')}:{getenv('HASS_PORT')}"
+    headers = {
+        'Authorization': f"Bearer {getenv('HASS_ACCESS_TOKEN')}"
+    }
+
+    for player in media_players:
+        res = get(f'{hass_endpoint}/api/states/{player}', headers=headers)
+
+        if not res.status_code == 200:
+            continue
+
+        state = res.json()
+        if not state['state'] in {'off', 'idle'}:
+            break
+    else:
+        return
+
+    metadata = {
+        'title': state['attributes']['media_title'],
+        'album': state['attributes']['media_album_name'],
+        'artist': state['attributes']['media_artist'],
+        'duration': state['attributes']['media_duration'],
+        'position': state['attributes']['media_position'],
+        'volume': state['attributes']['volume_level'],
+        'artwork': f"{hass_endpoint}{state['attributes']['entity_picture']}",
+        'state': state['state']
+    }
 
     return metadata
 
@@ -92,4 +130,4 @@ if __name__ == '__main__':
 
     load_dotenv()
 
-    pprint(get_tv_metadata())
+    pprint(get_music_metadata())
