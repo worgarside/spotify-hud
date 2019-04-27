@@ -3,8 +3,12 @@ from dotenv import load_dotenv
 from os import getenv
 from json import dumps
 from flask_scss import Scss
+from pigpio import pi as rasp_pi, OUTPUT
+from .api import get_tv_metadata, get_music_metadata
 
 load_dotenv()
+
+CRT_PIN = int(getenv('CRT_PIN'))
 
 app = Flask(__name__)
 
@@ -30,6 +34,16 @@ def index():
     )
 
 
+@app.route('/api/tv')
+def api_tv():
+    return jsonify(get_tv_metadata())
+
+
+@app.route('/api/music')
+def api_music():
+    return jsonify(get_music_metadata())
+
+
 @app.route('/no-content')
 @app.route('/no_content')
 def no_content():
@@ -52,7 +66,25 @@ def tv():
     )
 
 
+@app.route('/start')
+@app.route('/crt_on')
+@app.route('/crt-on')
+def start_crt():
+    pi = rasp_pi()
+    pi.set_mode(CRT_PIN, OUTPUT)
+    pi.write(CRT_PIN, True)
+    pi.stop()
+
+    return jsonify({'success': True})
+
+
 @app.route('/shutdown')
+@app.route('/crt_off')
+@app.route('/crt-off')
 def shutdown():
-    print('shutting down bye bye')
-    return jsonify({'shutdown': True})
+    pi = rasp_pi()
+    pi.set_mode(CRT_PIN, OUTPUT)
+    pi.write(CRT_PIN, False)
+    pi.stop()
+
+    return jsonify({'success': True})

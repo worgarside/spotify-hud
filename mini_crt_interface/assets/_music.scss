@@ -1,14 +1,5 @@
 // ========================== Music ========================== //
 
-#artwork {
-    width: 100%;
-    max-width: 500px;
-}
-
-#title, #artist {
-    white-space: nowrap;
-}
-
 #progress-bar {
     background-color: #5a5a5a;
     width: 100%;
@@ -20,17 +11,6 @@
         width: 10%;
         height: 100%;
         border-radius: 5px;
-    }
-}
-
-.scroll-left {
-    height: 50px;
-    overflow: hidden;
-    position: relative;
-
-    h1 {
-        position: absolute;
-        height: 100%;
     }
 }
 
@@ -61,7 +41,24 @@
     }
 }
 
-@keyframes artwork-glitch-anim-1 {
+img.artwork__music.glitch {
+    &:nth-child(2) {
+        left: -1%;
+        animation: artwork__music--glitch-1 2s infinite linear alternate-reverse;
+    }
+
+    &:nth-child(3) {
+        left: 2%;
+        animation: artwork__music--glitch-2 3s infinite linear alternate-reverse;
+    }
+
+    &:nth-child(4) {
+        left: 4%;
+        animation: artwork__music--glitch-2 5s infinite linear alternate-reverse;
+    }
+}
+
+@keyframes artwork__music--glitch-1 {
     0% {
         clip: rect(249px, 250px, 112px, 0);
     }
@@ -202,7 +199,7 @@
     }
 }
 
-@keyframes artwork-glitch-anim-2 {
+@keyframes artwork__music--glitch-2 {
     0% {
         clip: rect(99px, 250px, 191px, 0);
     }
@@ -343,60 +340,13 @@
     }
 }
 
-//@keyframes artwork-glitch-anim-3 {
-//    @for $i from 0 through 45 {
-//        #{100/45 * $i}% {
-//            clip: rect((random(251))+px, 250px, random(254) + px, 0);
-//        }
-//    }
-//}
-
-img.artwork {
-    position: fixed;
-}
-
-.artwork-container > img.artwork.glitch {
-    &:nth-child(2) {
-        left: -1%;
-        animation: artwork-glitch-anim-1 2s infinite linear alternate-reverse;
-    }
-
-    &:nth-child(3) {
-        left: 2%;
-        animation: artwork-glitch-anim-2 3s infinite linear alternate-reverse;
-    }
-
-    &:nth-child(4) {
-        left: 4%;
-        animation: artwork-glitch-anim-2 5s infinite linear alternate-reverse;
-    }
-}
-
-.paused {
-    &-container {
-        background-color: rgba(75, 75, 75, .5);
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        align-items: center;
-        justify-content: center;
-        display: none;
-    }
-
-    &-bar {
-        width: 8%;
-        height: 40%;
-        background-color: white;
-        margin: 0 2.5%;
-
-        &-group {
-            height: 50%;
-            width: 33%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+/*
+@keyframes artwork-glitch-anim-3 {
+    @for $i from 0 through 45 {
+        #{100/45 * $i}% {
+            clip: rect((random(251))+px, 250px, random(254) + px, 0);
         }
     }
 }
+*/
+
