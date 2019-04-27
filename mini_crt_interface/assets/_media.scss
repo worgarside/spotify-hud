@@ -1,16 +1,11 @@
 // ========================== All Media ========================== //
 
-#title, #artist {
+.title{
     white-space: nowrap;
 }
 
-.title {
-    &__primary{
-
-    }
-    &__secondary{
-
-    }
+img.artwork {
+    position: absolute;
 }
 
 .scroll-left {

@@ -2,18 +2,23 @@
 
 {% block content %}
     <div class="container-fluid">
-        <div class="row mt-3">
-            <div class="col text-center">
-                <img class="art" src="{{ url_for('static', filename='images/bg_color.webp') }}" alt="">
+        <div class="row no-gutters">
+            <div class="col-12">
+                <img class="artwork artwork__tv" src="{{ url_for('static', filename='images/bg_color.webp') }}" alt="">
+                <img class="artwork artwork__tv glitch" src="{{ url_for('static', filename='images/bg_color.webp') }}" alt="">
+                <img class="artwork artwork__tv glitch" src="{{ url_for('static', filename='images/bg_color.webp') }}" alt="">
+                <img class="artwork artwork__tv glitch" src="{{ url_for('static', filename='images/bg_color.webp') }}" alt="">
+            </div>
+            <div class="col-12 artwork__tv--buffer">
             </div>
         </div>
         <div class="row pt-3">
             <div class="col">
                 <div class="mx-3">
                     <div class="scroll-left my-2">
-                        <h1 id="title__primary" class="mb-0"></h1>
+                        <h1 class="title title__primary mb-0"></h1>
                     </div>
-                    <h3 id="title__secondary" class="my-3"></h3>
+                    <h3 class="title title__secondary my-3"></h3>
                 </div>
             </div>
         </div>
@@ -26,5 +31,6 @@
 {% endblock content %}
 
 {% block extra_js %}
+    <script src="{{ url_for('static', filename='javascript/media.js') }}"></script>
     <script src="{{ url_for('static', filename='javascript/tv.js') }}"></script>
 {% endblock extra_js %}

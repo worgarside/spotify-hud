@@ -1,6 +1,5 @@
 let nowPlaying;
 let estimatedPosition = 0;
-const updateDelay = 2500;
 
 function array_move(arr, old_index, new_index) {
     if (new_index >= arr.length) {
@@ -12,39 +11,10 @@ function array_move(arr, old_index, new_index) {
     arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
 }
 
-function scrollElement(elem) {
-    const elemWidth = $(elem).width();
-    const outerWidth = $(elem).parent().width();
-
-    if (elemWidth < outerWidth) {
-        $(elem).css('left', 0);
-        setTimeout(() => {
-            scrollElement(elem);
-        }, 5000);
-    } else {
-        const time = (elem.position().left !== 0 ? elemWidth + outerWidth : elemWidth) * 5;
-
-        $(elem).animate(
-            {
-                'left': -elemWidth
-            },
-            {
-                duration: time,
-                easing: 'linear',
-                complete: () => {
-                    $(elem).css('left', '100%');
-                    scrollElement(elem);
-                }
-            }
-        )
-    }
-}
-
 function getActivePlayer() {
     return new Promise((resolve, reject) => {
         let activePlayer = undefined;
         let returnCount = 0;
-
 
         window.mediaPlayers.forEach(player => {
             $.ajax({
@@ -91,7 +61,6 @@ function updateState() {
     getActivePlayer()
         .then((activePlayer) => {
             if (activePlayer) {
-                // console.log('there is an active player');
                 if (mediaPlayers[0] !== activePlayer['entity_id']) {
                     array_move(
                         mediaPlayers,
@@ -108,8 +77,9 @@ function updateState() {
             }
 
         })
-        .catch((err) => {
-            console.log(err);
+        .catch(() => {
+            clearInterval(updateTimer);
+            window.location.href = '/no_content';
         });
 }
 
@@ -119,8 +89,8 @@ function updateGUI(activePlayer) {
         if (nowPlaying === undefined || nowPlaying['attributes']['media_content_id'] !== activePlayer['attributes']['media_content_id']) {
             estimatedPosition = activePlayer['attributes']['media_position'];
             $('.artwork').attr('src', `${hassUrl}${activePlayer['attributes']['entity_picture']}`);
-            $('#title').text(activePlayer['attributes']['media_title']);
-            $('#artist').text(activePlayer['attributes']['media_artist']);
+            $('.title.title__primary').text(activePlayer['attributes']['media_title']);
+            $('.title.title__secondary').text(activePlayer['attributes']['media_artist']);
         }
 
         const glitchImages = $('.artwork.glitch');
@@ -131,10 +101,12 @@ function updateGUI(activePlayer) {
                 glitchImages.css('display', 'initial');
                 paused.css('display', 'none');
                 estimatedPosition += updateDelay / 1000;
+                allowScroll = true;
                 break;
             case 'paused':
                 glitchImages.css('display', 'none');
                 paused.css('display', 'flex');
+                allowScroll = false;
                 break;
             default:
                 break;
@@ -188,5 +160,5 @@ const updateTimer = setInterval(() => {
 ;}, updateDelay);
 
 setTimeout(() => {
-    scrollElement($('#title'));
+    scrollElement($('.title.title__primary'));
 }, updateDelay);

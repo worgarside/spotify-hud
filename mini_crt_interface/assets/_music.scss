@@ -41,7 +41,24 @@
     }
 }
 
-@keyframes artwork-glitch-anim-1 {
+img.artwork__music.glitch {
+    &:nth-child(2) {
+        left: -1%;
+        animation: artwork__music--glitch-1 2s infinite linear alternate-reverse;
+    }
+
+    &:nth-child(3) {
+        left: 2%;
+        animation: artwork__music--glitch-2 3s infinite linear alternate-reverse;
+    }
+
+    &:nth-child(4) {
+        left: 4%;
+        animation: artwork__music--glitch-2 5s infinite linear alternate-reverse;
+    }
+}
+
+@keyframes artwork__music--glitch-1 {
     0% {
         clip: rect(249px, 250px, 112px, 0);
     }
@@ -182,7 +199,7 @@
     }
 }
 
-@keyframes artwork-glitch-anim-2 {
+@keyframes artwork__music--glitch-2 {
     0% {
         clip: rect(99px, 250px, 191px, 0);
     }
@@ -323,31 +340,13 @@
     }
 }
 
-//@keyframes artwork-glitch-anim-3 {
-//    @for $i from 0 through 45 {
-//        #{100/45 * $i}% {
-//            clip: rect((random(251))+px, 250px, random(254) + px, 0);
-//        }
-//    }
-//}
-
-img.artwork {
-    position: fixed;
-}
-
-.artwork-container > img.artwork.glitch {
-    &:nth-child(2) {
-        left: -1%;
-        animation: artwork-glitch-anim-1 2s infinite linear alternate-reverse;
-    }
-
-    &:nth-child(3) {
-        left: 2%;
-        animation: artwork-glitch-anim-2 3s infinite linear alternate-reverse;
-    }
-
-    &:nth-child(4) {
-        left: 4%;
-        animation: artwork-glitch-anim-2 5s infinite linear alternate-reverse;
+/*
+@keyframes artwork-glitch-anim-3 {
+    @for $i from 0 through 45 {
+        #{100/45 * $i}% {
+            clip: rect((random(251))+px, 250px, random(254) + px, 0);
+        }
     }
 }
+*/
+
