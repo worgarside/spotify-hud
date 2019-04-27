@@ -9,23 +9,8 @@
     color: white;
     font-family: UbuntuMonospaced, serif; }
 
-    #artwork {
-      width: 100%;
-      max-width: 500px; }
-
-      #title, #artist {
-        white-space: nowrap; }
-
-        #progress-bar {
-          background-color: #5a5a5a;
-          width: 100%;
-          height: 10px;
-          border-radius: 5px; }
-          #progress-bar #current-progress {
-            background-color: #989898;
-            width: 10%;
-            height: 100%;
-            border-radius: 5px; }
+    #title, #artist {
+      white-space: nowrap; }
 
 .scroll-left {
   height: 50px;
@@ -34,6 +19,39 @@
   .scroll-left h1 {
     position: absolute;
     height: 100%; }
+
+.paused-container {
+  background-color: rgba(75, 75, 75, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  display: none; }
+  .paused-bar {
+    width: 8%;
+    height: 40%;
+    background-color: white;
+    margin: 0 2.5%; }
+    .paused-bar-group {
+      height: 50%;
+      width: 33%;
+      display: flex;
+      align-items: center;
+      justify-content: center; }
+
+#progress-bar {
+  background-color: #5a5a5a;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px; }
+  #progress-bar #current-progress {
+    background-color: #989898;
+    width: 10%;
+    height: 100%;
+    border-radius: 5px; }
 
 .volume-meter {
   height: 100%;
@@ -256,37 +274,18 @@ img.artwork {
         left: 4%;
         animation: artwork-glitch-anim-2 5s infinite linear alternate-reverse; }
 
-.paused-container {
-  background-color: rgba(75, 75, 75, 0.5);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  display: none; }
-  .paused-bar {
-    width: 8%;
-    height: 40%;
-    background-color: white;
-    margin: 0 2.5%; }
-    .paused-bar-group {
-      height: 50%;
-      width: 33%;
-      display: flex;
-      align-items: center;
-      justify-content: center; }
+img.art {
+  max-width: 80%; }
 
-@font-face {
-  font-family: 'DigitalClock';
-  src: url('digital-7 (mono).ttf'); }
+  @font-face {
+    font-family: 'DigitalClock';
+    src: url('digital-7 (mono).ttf'); }
 
-  @keyframes MoveUpDown {
-    0%, 100% {
-      bottom: -25px;   }
-      50% {
-        bottom: 30px;   }
+    @keyframes MoveUpDown {
+      0%, 100% {
+        bottom: -25px;   }
+        50% {
+          bottom: 30px;   }
 }
 
 .noise {

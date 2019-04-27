@@ -40,73 +40,32 @@ function scrollElement(elem) {
     }
 }
 
-function getActivePlayer() {
+function checkPlex() {
     return new Promise((resolve, reject) => {
-        let activePlayer = undefined;
-        let returnCount = 0;
-
-
-        window.mediaPlayers.forEach(player => {
-            $.ajax({
-                url: `${hassUrl}/api/states/${player}`,
-                type: 'GET',
-                beforeSend: xhr => {
-                    xhr.setRequestHeader('Authorization', `Bearer ${hassAccessToken}`);
-                },
-                contentType: 'application/json',
-                data: {},
-                success: (state) => {
-                    returnCount++;
-                    if (state['state'] !== 'off' && state['state'] !== 'idle') {
-                        activePlayer = state;
-                    }
-                },
-                error: (err) => {
-                    returnCount++;
-
-                    console.log(`Error: ${JSON.stringify(err)}`); // TODO make this better
-                    reject();
+        $.ajax({
+            url: '/api/tv',
+            type: 'GET',
+            contentType: 'application/json',
+            data: {},
+            success: (response) => {
+                if (!response.hasOwnProperty('error')) {
+                    resolve(response);
+                } else {
+                    console.log(`Error: ${JSON.stringify(response)}`);
                 }
-            });
-        });
-
-        if (returnCount === window.mediaPlayers.length) {
-            console.log('Best case');
-            resolve(activePlayer);
-        }
-
-        const responseChecker = setInterval(() => {
-            if (returnCount === window.mediaPlayers.length) {
-                clearInterval(responseChecker);
-                console.log('resolving');
-                resolve(activePlayer);
-            } else {
-                console.log(`${returnCount} returned, waiting...`);
+            },
+            error: (err) => {
+                console.log(`Error: ${JSON.stringify(err)}`);
             }
-        }, 250);
+        });
     });
 }
 
 function updateState() {
-    getActivePlayer()
-        .then((activePlayer) => {
-            if (activePlayer) {
-                // console.log('there is an active player');
-                if (mediaPlayers[0] !== activePlayer['entity_id']) {
-                    array_move(
-                        mediaPlayers,
-                        window.mediaPlayers.indexOf(activePlayer['entity_id']),
-                        0
-                    );
-                }
-
-                updateGUI(activePlayer);
-            } else {
-                console.log('there are no active players');
-                clearInterval(updateTimer);
-                window.location.href = '/no_content';
-            }
-
+    checkPlex()
+        .then((activeContent) => {
+            $('.art').attr('src', activeContent['art']);
+            $('.title__primary').text(activeContent['attributes']);
         })
         .catch((err) => {
             console.log(err);
@@ -185,8 +144,9 @@ updateState();
 const updateTimer = setInterval(() => {
     console.log('');
     updateState()
-;}, updateDelay);
-
-setTimeout(() => {
-    scrollElement($('#title'));
+    ;
 }, updateDelay);
+
+// setTimeout(() => {
+//     scrollElement($('#title'));
+// }, updateDelay);

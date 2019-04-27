@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "db1caf1132e1a58adff0f801dc2d1c84d9de0e7423d5a3b5c8334ec0e7f1226b"
+            "sha256": "981cce9bc8db3cf085397251566c23f0b42a69b453e8d06b25299c6f69409315"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,6 +16,15 @@
         ]
     },
     "default": {
+        "beautifulsoup4": {
+            "hashes": [
+                "sha256:034740f6cb549b4e932ae1ab975581e6103ac8f942200a0e9759065984391858",
+                "sha256:945065979fb8529dd2f37dbb58f00b661bdbcbebf954f93b32fdf5263ef35348",
+                "sha256:ba6d5c59906a85ac23dadfe5c88deaf3e179ef565f4898671253e50a78680718"
+            ],
+            "index": "pypi",
+            "version": "==4.7.1"
+        },
         "certifi": {
             "hashes": [
                 "sha256:59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5",
@@ -108,6 +117,14 @@
             ],
             "version": "==1.1.1"
         },
+        "pigpio": {
+            "hashes": [
+                "sha256:274fc6df10a787e6a34b748a61a142f38dbf812b386f5b1762c66ad6a67b7873",
+                "sha256:30b48583991008773aff73d784976884584a868e78936ca64689b1f298160c2e"
+            ],
+            "index": "pypi",
+            "version": "==1.42"
+        },
         "pyscss": {
             "hashes": [
                 "sha256:14a25c33c221a66bb1f000a6a067f376528d3df2f9333cee9c95709a9280cdb0"
@@ -137,12 +154,19 @@
             ],
             "version": "==1.12.0"
         },
+        "soupsieve": {
+            "hashes": [
+                "sha256:6898e82ecb03772a0d82bd0d0a10c0d6dcc342f77e0701d0ec4a8271be465ece",
+                "sha256:b20eff5e564529711544066d7dc0f7661df41232ae263619dede5059799cdfca"
+            ],
+            "version": "==1.9.1"
+        },
         "urllib3": {
             "hashes": [
-                "sha256:61bf29cada3fc2fbefad4fdf059ea4bd1b4a86d2b6d15e1c7c0b582b9752fe39",
-                "sha256:de9529817c93f27c8ccbfead6985011db27bd0ddfcdb2d86f3f663385c6a9c22"
+                "sha256:4c291ca23bbb55c76518905869ef34bdd5f0e46af7afe6861e8375643ffee1a0",
+                "sha256:9a247273df709c4fedb38c711e44292304f73f39ab01beda9f6b9fc375669ac3"
             ],
-            "version": "==1.24.1"
+            "version": "==1.24.2"
         },
         "werkzeug": {
             "hashes": [

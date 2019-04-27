@@ -1,4 +1,4 @@
-let timeInSeconds = 121;
+let timeInSeconds = 91;
 
 function checkMusicPlaying() {
     return new Promise((resolve, reject) => {
@@ -54,12 +54,23 @@ function str_pad_left(string, pad, length) {
     return (new Array(length + 1).join(pad) + string).slice(-length);
 }
 
-function shutdown() {
-    window.location.href = '/shutdown';
+function get_endpoint(endpoint) {
+    $.ajax({
+        url: endpoint,
+        type: 'GET',
+        contentType: 'application/json',
+        success: (response) => {
+            return response;
+        },
+        error: (err) => {
+            console.log(`Error: ${JSON.stringify(err)}`);
+        }
+    });
+
 }
 
 
-const countdown = setInterval(() => {
+setInterval(() => {
     timeInSeconds--;
     let displayMinutes = Math.floor(timeInSeconds / 60);
     let displaySeconds = timeInSeconds % 60;
@@ -76,9 +87,8 @@ const countdown = setInterval(() => {
             });
     }
 
-    if (timeInSeconds <= 0) {
-        clearInterval(countdown);
-        shutdown();
+    if (timeInSeconds === 0) {
+        get_endpoint('/shutdown');
     }
 
 }, 1000);

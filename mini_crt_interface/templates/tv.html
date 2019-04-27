@@ -1,5 +1,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>tv</h1>
+    <div class="container-fluid">
+        <div class="row mt-3">
+            <div class="col text-center">
+                <img class="art" src="{{ url_for('static', filename='images/bg_color.webp') }}" alt="">
+            </div>
+        </div>
+        <div class="row pt-3">
+            <div class="col">
+                <div class="mx-3">
+                    <div class="scroll-left my-2">
+                        <h1 id="title__primary" class="mb-0"></h1>
+                    </div>
+                    <h3 id="title__secondary" class="my-3"></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="paused-container">
+        <div class="paused-bar"></div>
+        <div class="paused-bar"></div>
+    </div>
 {% endblock content %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='javascript/tv.js') }}"></script>
+{% endblock extra_js %}
