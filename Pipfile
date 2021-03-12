@@ -13,10 +13,9 @@ jinja2 = "*"
 flask-scss = "*"
 beautifulsoup4 = "*"
 pigpio = "*"
+pyqt5 = "*"
+paho-mqtt = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.7"
-
-[scripts]
-server = "pipenv run python -m flask run --host 0.0.0.0"
-open = "chromium-browser -kiosk --disable-session-crashed-bubble --disable-infobars --incognito 127.0.0.1:5000"
