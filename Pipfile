@@ -18,6 +18,7 @@ paho-mqtt = "*"
 pillow = "*"
 spotipy = "*"
 wg-utilities = "*"
+black = "==20.8b1"
 
 [requires]
 python_version = "3.7"

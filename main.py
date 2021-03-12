@@ -6,33 +6,69 @@ from os import getenv
 from tkinter import *
 from tkinter.font import Font
 from traceback import format_exc
-
+from requests import get
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
-from pigpio import pi as rasp_pi, OUTPUT
 from requests import post
+from datetime import datetime, timedelta
+from json import load, dumps, dump
+from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
+from os import getenv, mkdir
+from os.path import join, abspath, dirname, sep
+from pathlib import Path
 
-load_dotenv()
+from dotenv import load_dotenv
+from spotipy import Spotify
+from spotipy.oauth2 import SpotifyOAuth
+from sys import stdout
+
+load_dotenv(join(abspath(dirname(__file__)), ".env"))
 
 #############
 # Constants #
 #############
 
-MQTT_BROKER = getenv('HASS_HOST')
-MQTT_CREDS = {
-    'username': getenv('MQTT_USERNAME'),
-    'password': getenv('MQTT_PASSWORD')
-}
-MQTT_TOPIC = getenv('MQTT_TOPIC')
-PB_PARAMS = {
-    'token': getenv('PB_API_KEY'),
-    't': 'CRT MQTT Alert'
-}
-SPEAKERS = ['media_player.all_speakers', 'media_player.hifi_system']
+# PB_PARAMS = {
+#     'token': getenv('PB_API_KEY'),
+#     't': 'CRT MQTT Alert'
+# }
+# SPEAKERS = ['media_player.all_speakers', 'media_player.hifi_system']
 CRT_PIN = int(getenv('CRT_PIN'))
 BG_COLOR = '#000000'
 STANDARD_ARGS = {'highlightthickness': 0, 'bd': 0, 'bg': BG_COLOR}
 CHAR_LIM = 31
+
+ALL_SCOPES = [
+    "ugc-image-upload",
+    "user-read-recently-played",
+    "user-top-read",
+    "user-read-playback-position",
+    "user-read-playback-state",
+    "user-modify-playback-state",
+    "user-read-currently-playing",
+    "app-remote-control",
+    "streaming",
+    "playlist-modify-public",
+    "playlist-modify-private",
+    "playlist-read-private",
+    "playlist-read-collaborative",
+    "user-follow-modify",
+    "user-follow-read",
+    "user-library-modify",
+    "user-library-read",
+    "user-read-email",
+    "user-read-private",
+]
+
+SPOTIFY = Spotify(
+    auth_manager=SpotifyOAuth(
+        client_id=getenv("SPOTIFY_CLIENT_ID"),
+        client_secret=getenv("SPOTIFY_CLIENT_SECRET"),
+        redirect_uri="http://localhost:8080",
+        scope=",".join(ALL_SCOPES),
+        cache_path=join(abspath(dirname(__file__)), "spotify_cache.json"),
+    )
+)
 
 ###########
 # Globals #
@@ -43,6 +79,8 @@ content_dict = {}
 dims = (0, 0)
 
 try:
+    from pigpio import pi as rasp_pi, OUTPUT
+
     pi = rasp_pi()
     pi.set_mode(CRT_PIN, OUTPUT)
 
@@ -53,7 +91,7 @@ try:
 
     def switch_off():
         pi.write(CRT_PIN, False)
-except AttributeError:
+except (AttributeError, ModuleNotFoundError):
     def switch_on():
         pass
 
@@ -80,8 +118,7 @@ def pb_notify(m, t, token):
 def update_display(payload):
     global content_dict
 
-    base64_encoded_string = unescape(payload['attributes']['artwork'])
-    content_dict['images']['tk_img'] = Image.open(BytesIO(b64decode(base64_encoded_string)))
+    content_dict['images']['tk_img'] = Image.open(BytesIO(payload['attributes']['artwork']))
 
     content_dict['images']['tk_img'] = content_dict['images']['tk_img'].resize((image_size, image_size),
                                                                                Image.ANTIALIAS)
@@ -132,11 +169,29 @@ def execute_command(payload):
         raise ValueError('Command not found')
 
 
-
-
 def get_update():
-    mqtt_client.publish('crt-pi/get-update', payload='get_update')
+    res = SPOTIFY.current_user_playing_track()
 
+    for img in sorted(
+        res["item"]["album"]["images"],
+        key=lambda i: i["height"],
+        reverse=True
+    ):
+        if img["height"] >= 300:
+            artwork_url = img["url"]
+            break
+    else:
+        artwork_url = "https://via.placeholder.com/300"
+
+    payload = {
+        "attributes": {
+            "artwork": get(artwork_url).content,
+            "media_title": res.get("item", {}).get("album", {}).get("name", "?"),
+            "media_artist":  ", ".join(artist.get("name", "?") for artist in res.get("item", {}).get("album", {}).get("artists", []))
+        }
+    }
+
+    update_display(payload)
 
 
 
