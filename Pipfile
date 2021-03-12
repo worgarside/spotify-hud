@@ -12,10 +12,12 @@ flask = "*"
 jinja2 = "*"
 flask-scss = "*"
 beautifulsoup4 = "*"
-pigpio = "*"
+#pigpio = "*"
 pyqt5 = "*"
 paho-mqtt = "*"
 pillow = "*"
+spotipy = "*"
+wg-utilities = "*"
 
 [requires]
 python_version = "3.7"

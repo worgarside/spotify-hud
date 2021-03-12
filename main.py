@@ -9,7 +9,6 @@ from traceback import format_exc
 
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
-from paho.mqtt.client import Client
 from pigpio import pi as rasp_pi, OUTPUT
 from requests import post
 
@@ -133,45 +132,19 @@ def execute_command(payload):
         raise ValueError('Command not found')
 
 
-def on_message(client, userdata, msg):
-    try:
-        payload = loads(msg.payload)
-
-        assert 'type' in payload and 'attributes' in payload
-
-        if payload['type'] == 'display':
-            update_display(payload)
-        elif payload['type'] == 'command':
-            execute_command(payload)
-
-    except Exception as e:
-        print(format_exc())
-        pb_notify(e.__repr__(), **PB_PARAMS)
 
 
 def get_update():
     mqtt_client.publish('crt-pi/get-update', payload='get_update')
 
 
-def setup_mqtt_client():
-    def on_connect(client, *args):
-        client.subscribe(MQTT_TOPIC)
 
-    temp_client = Client()
-    temp_client.username_pw_set(**MQTT_CREDS)
-    temp_client.on_connect = on_connect
-    temp_client.on_message = on_message
-    temp_client.connect(MQTT_BROKER, 1883, 60)
-
-    return temp_client
 
 
 def initialize():
     global image_size, content_dict, dims
 
     switch_on()
-
-    client = setup_mqtt_client()
 
     root = Tk()
     root.attributes('-fullscreen', True)
@@ -224,11 +197,10 @@ def initialize():
     content_dict['widgets']['media_title'].place(**content_dict['coords']['media_title'])
     content_dict['widgets']['media_artist'].place(**content_dict['coords']['media_artist'])
 
-    return client, root
+    return root
 
 
 if __name__ == '__main__':
-    mqtt_client, tk_root = initialize()
-    mqtt_client.loop_start()
+    tk_root = initialize()
     tk_root.after(1000, func=get_update)
     tk_root.mainloop()
