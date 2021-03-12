@@ -1,7 +1,12 @@
+from datetime import datetime
 from html import unescape
 from io import BytesIO
-from os import getenv
-from os.path import join, abspath, dirname
+from json import load, dump
+from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
+from os import getenv, mkdir
+from os.path import exists, join, abspath, dirname, sep
+from pathlib import Path
+from sys import stdout
 from tkinter import *
 from tkinter.font import Font
 
@@ -21,6 +26,41 @@ CRT_PIN = int(getenv("CRT_PIN"))
 BG_COLOR = "#000000"
 STANDARD_ARGS = {"highlightthickness": 0, "bd": 0, "bg": BG_COLOR}
 CHAR_LIM = 31
+MAX_WAIT_TIME_MS = 10000
+
+LOGGER = getLogger(__name__)
+LOGGER.setLevel(DEBUG)
+
+LOG_DIR = f"{Path.home()}/logs/{__file__.split(sep)[-2]}"
+
+PAYLOAD_CACHE = "/tmp/crt_payload.json"
+
+if not exists(PAYLOAD_CACHE):
+    with open(PAYLOAD_CACHE, "w") as fout:
+        fout.write(str(dict()))
+
+try:
+    mkdir(f"{Path.home()}/logs")
+except FileExistsError:
+    pass
+
+try:
+    mkdir(LOG_DIR)
+except FileExistsError:
+    pass
+
+TODAY_STR = datetime.today().strftime("%Y-%m-%d")
+
+SH = StreamHandler(stdout)
+FH = FileHandler(f"{LOG_DIR}/{TODAY_STR}.log")
+
+FORMATTER = Formatter(
+    "%(asctime)s\t%(name)s\t[%(levelname)s]\t%(message)s", "%Y-%m-%d %H:%M:%S"
+)
+FH.setFormatter(FORMATTER)
+SH.setFormatter(FORMATTER)
+LOGGER.addHandler(FH)
+LOGGER.addHandler(SH)
 
 ALL_SCOPES = [
     "ugc-image-upload",
@@ -69,26 +109,28 @@ try:
     pi.set_mode(CRT_PIN, OUTPUT)
 
     def switch_on():
+        LOGGER.debug("Switching display on")
         pi.write(CRT_PIN, True)
 
     def switch_off():
+        LOGGER.debug("Switching display off")
         pi.write(CRT_PIN, False)
 
 
 except (AttributeError, ModuleNotFoundError):
 
     def switch_on():
-        pass
+        LOGGER.debug("Switching display on (but not really)")
 
     def switch_off():
-        pass
+        LOGGER.debug("Switching display off (but not really)")
 
 
 def update_display(payload):
     global content_dict
 
     content_dict["images"]["tk_img"] = Image.open(
-        BytesIO(payload["attributes"]["artwork"])
+        BytesIO(get(payload["attributes"]["artwork_url"]).content)
     )
 
     content_dict["images"]["tk_img"] = content_dict["images"]["tk_img"].resize(
@@ -101,8 +143,6 @@ def update_display(payload):
     content_dict["widgets"]["artwork"].configure(
         image=content_dict["images"]["artwork"]
     )
-
-    del payload["attributes"]["artwork"]
 
     for k, v in payload["attributes"].items():
         if k in content_dict["widgets"]:
@@ -147,8 +187,16 @@ def execute_command(payload):
         raise ValueError("Command not found")
 
 
-def get_update():
+def get_update(force_update=False):
     res = SPOTIFY.current_user_playing_track()
+
+    time_remaining = res.get("item", {}).get("duration_ms", 30000) - res.get(
+        "progress_ms", 0
+    )
+
+    if not res.get("is_playing", False):
+        switch_off()
+        return time_remaining
 
     for img in sorted(
         res["item"]["album"]["images"], key=lambda i: i["height"], reverse=True
@@ -159,18 +207,35 @@ def get_update():
     else:
         artwork_url = "https://via.placeholder.com/300"
 
+    media_title = res.get("item", {}).get("album", {}).get("name", "?")
+    media_artists = ", ".join(
+        artist.get("name", "?")
+        for artist in res.get("item", {}).get("album", {}).get("artists", [])
+    )
+
     payload = {
         "attributes": {
-            "artwork": get(artwork_url).content,
-            "media_title": res.get("item", {}).get("album", {}).get("name", "?"),
-            "media_artist": ", ".join(
-                artist.get("name", "?")
-                for artist in res.get("item", {}).get("album", {}).get("artists", [])
-            ),
+            "artwork_url": artwork_url,
+            "media_title": media_title,
+            "media_artist": media_artists,
         }
     }
 
-    update_display(payload)
+    with open(PAYLOAD_CACHE) as fin:
+        prev_payload = load(fin)
+
+    if payload != prev_payload or force_update:
+        with open("/tmp/crt_payload.json", "w") as fout:
+            dump(payload, fout)
+
+        LOGGER.info("Updating display for '%s' by '%s'", media_title, media_artists)
+
+        update_display(payload)
+
+    else:
+        LOGGER.debug("No change, moving on")
+
+    return time_remaining
 
 
 def initialize():
@@ -233,7 +298,16 @@ def initialize():
     return root
 
 
+def refresher(root):
+    LOGGER.debug("Refreshing")
+
+    time_remaining_ms = get_update()
+
+    root.after(min(MAX_WAIT_TIME_MS, time_remaining_ms), refresher, root)
+
+
 if __name__ == "__main__":
     tk_root = initialize()
-    tk_root.after(1000, func=get_update)
+    refresher(tk_root)
+    get_update(True)
     tk_root.mainloop()
