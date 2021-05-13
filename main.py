@@ -13,7 +13,14 @@ from tkinter.font import Font
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
 from pychromecast import get_listed_chromecasts
-from pychromecast.controllers.media import MediaStatusListener
+from pychromecast.controllers.media import (
+    MediaStatusListener,
+    MEDIA_PLAYER_STATE_PLAYING,
+    MEDIA_PLAYER_STATE_BUFFERING,
+    MEDIA_PLAYER_STATE_PAUSED,
+    MEDIA_PLAYER_STATE_IDLE,
+    MEDIA_PLAYER_STATE_UNKNOWN,
+)
 from pychromecast.controllers.receiver import CastStatusListener
 from requests import get
 from sys import stdout
@@ -119,11 +126,30 @@ class ChromecastMediaListener(MediaStatusListener):
         payload = {
             "artwork_url": sorted(
                 status.images, key=lambda img: img.height, reverse=True
-            )[0].url,
+            )[0].url
+            if status.images
+            else None,
             "media_title": status.title,
             "media_artist": status.artist,
             "album_name": status.album_name,
         }
+
+        if status.player_state in {
+            MEDIA_PLAYER_STATE_PLAYING,
+            MEDIA_PLAYER_STATE_PAUSED,
+        }:
+            switch_on()
+        elif status.player_state in {
+            MEDIA_PLAYER_STATE_BUFFERING,
+            MEDIA_PLAYER_STATE_IDLE,
+            MEDIA_PLAYER_STATE_UNKNOWN,
+        }:
+            switch_off()
+        else:
+            LOGGER.error(
+                "`MediaStatus.player_state` in unexpected stater: `%s`",
+                status.player_state,
+            )
 
         if payload != self._previous_payload:
             self._previous_payload = payload
@@ -195,8 +221,6 @@ def update_display(payload):
                 ) * 3
 
                 hscroll_label(k)
-
-    switch_on()
 
 
 def hscroll_label(k):
