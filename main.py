@@ -7,7 +7,7 @@ from os import getenv, mkdir
 from os.path import exists, join, sep
 from pathlib import Path
 from tkinter.font import Font
-
+from re import compile as compile_regex
 from PIL import Image, ImageTk
 from pychromecast import get_listed_chromecasts
 from pychromecast.controllers.media import MediaStatusListener
@@ -27,10 +27,13 @@ STANDARD_ARGS = {"highlightthickness": 0, "bd": 0, "bg": BG_COLOR}
 CHAR_LIM = 31
 MAX_WAIT_TIME_MS = 10000
 
+PATTERN = compile_regex("[^\w ]+")
+
 LOGGER = getLogger(__name__)
 LOGGER.setLevel(DEBUG)
 
 LOG_DIR = join(Path.home(), "logs", __file__.split(sep)[-2])
+ARTWORK_DIR = join(Path.home(), "crt_artwork")
 
 try:
     from pigpio import pi as rasp_pi, OUTPUT
@@ -38,11 +41,9 @@ try:
     pi = rasp_pi()
     pi.set_mode(CRT_PIN, OUTPUT)
 
-
     def switch_on():
         LOGGER.debug("Switching display on")
         pi.write(CRT_PIN, True)
-
 
     def switch_off():
         LOGGER.debug("Switching display off")
@@ -54,22 +55,16 @@ except (AttributeError, ModuleNotFoundError):
     def switch_on():
         LOGGER.debug("Switching display on (but not really)")
 
-
     def switch_off():
         LOGGER.debug("Switching display off (but not really)")
+
 
 # Change to the friendly name of your Chromecast
 CAST_NAME = "Hi-fi System"
 
-try:
-    mkdir(join(Path.home(), "logs"))
-except FileExistsError:
-    pass
-
-try:
-    mkdir(LOG_DIR)
-except FileExistsError:
-    pass
+for _dir in [join(Path.home(), "logs"), LOG_DIR, ARTWORK_DIR]:
+    if not exists(_dir):
+        mkdir(_dir)
 
 TODAY_STR = datetime.today().strftime("%Y-%m-%d")
 
@@ -119,6 +114,7 @@ class ChromecastMediaListener(MediaStatusListener):
             )[0].url,
             "media_title": status.title,
             "media_artist": status.artist,
+            "album_name": status.album_name,
         }
 
         if payload != self._previous_payload:
@@ -133,9 +129,43 @@ def update_display(payload):
 
     LOGGER.info("Updating display with payload:\t%s", dumps(payload))
 
-    content_dict["images"]["tk_img"] = Image.open(
-        BytesIO(get(payload["artwork_url"]).content)
+    if not exists(
+        artist_dir := join(
+            ARTWORK_DIR,
+            PATTERN.sub("", payload["media_artist"]).lower().replace(" ", "_"),
+        )
+    ):
+        mkdir(artist_dir)
+        LOGGER.info("Created artwork directory for `%s`", payload["media_artist"])
+
+    artwork_path = join(
+        artist_dir,
+        PATTERN.sub("", payload["album_name"]).lower().replace(" ", "_"),
     )
+
+    try:
+        with open(artwork_path, "rb") as fin:
+            content_dict["images"]["tk_img"] = Image.open(BytesIO(fin.read()))
+        LOGGER.debug("Retrieved artwork from `%s`", artwork_path)
+    except FileNotFoundError:
+        artwork_bytes = get(payload["artwork_url"]).content
+        content_dict["images"]["tk_img"] = Image.open(BytesIO(artwork_bytes))
+        with open(artwork_path, "wb") as fout:
+            fout.write(artwork_bytes)
+
+        LOGGER.info(
+            "Saved artwork for `%s` by `%s` to `%s`",
+            payload["album_name"],
+            payload["media_artist"],
+            artwork_path,
+        )
+
+    except Exception as exc:
+        LOGGER.error(
+            "Unable to get artwork: `%s - %s`",
+            type(exc).__name__,
+            exc.__str__(),
+        )
 
     content_dict["images"]["tk_img"] = content_dict["images"]["tk_img"].resize(
         (image_size, image_size), Image.ANTIALIAS
@@ -153,10 +183,8 @@ def update_display(payload):
             content_dict["widgets"][k].config(text=unescape(v))
             if len(content_dict["widgets"][k]["text"]) > CHAR_LIM:
                 content_dict["widgets"][k]["text"] = (
-                                                         "  " +
-                                                         content_dict["widgets"][k][
-                                                             "text"] + "  "
-                                                     ) * 3
+                    "  " + content_dict["widgets"][k]["text"] + "  "
+                ) * 3
 
                 hscroll_label(k)
 
@@ -171,7 +199,7 @@ def hscroll_label(k):
     content_dict["coords"][k]["x"] = (
         0.5 * dims[0]
         if content_dict["coords"][k]["x"]
-           < (0.5 * dims[0]) - (content_dict["widgets"][k].winfo_width() / 3)
+        < (0.5 * dims[0]) - (content_dict["widgets"][k].winfo_width() / 3)
         else content_dict["coords"][k]["x"]
     )
 
@@ -259,7 +287,11 @@ def run_interface():
             # Start socket client's worker thread and wait for initial status update
             chromecast.wait()
         except Exception as exc:
-            LOGGER.error("Error connecting to Chromecast: `%s - %s`", type(exc).__name__, exc.__str__())
+            LOGGER.error(
+                "Error connecting to Chromecast: `%s - %s`",
+                type(exc).__name__,
+                exc.__str__(),
+            )
             sleep(10)
 
     # chromecast.register_status_listener(
