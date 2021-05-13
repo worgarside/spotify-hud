@@ -301,10 +301,19 @@ def run_interface():
         ChromecastMediaListener(chromecast.name, chromecast)
     )
 
+    LOGGER.info("Chromecast connected and status listener registered")
+
     chromecast.media_controller.update_status()
 
+    LOGGER.info("Status updated, starting TK mainloop")
+
     tk_root.mainloop()
+
+    LOGGER.info("TK mainloop exited, stopping Chromecast discovery")
+
     browser.stop_discovery()
+
+    LOGGER.info("Exiting")
 
 
 if __name__ == "__main__":
