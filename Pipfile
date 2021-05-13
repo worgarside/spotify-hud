@@ -12,6 +12,8 @@ python-dotenv = "*"
 pigpio = {version = "*",sys_platform = "!= 'darwin'"}
 pychromecast = "*"
 pillow = "*"
+requests = "*"
+tkinter = "*"
 
 [requires]
 python_version = "3.8"

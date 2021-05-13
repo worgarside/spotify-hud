@@ -32,7 +32,7 @@ PATTERN = compile_regex("[^\w ]+")
 LOGGER = getLogger(__name__)
 LOGGER.setLevel(DEBUG)
 
-LOG_DIR = join(Path.home(), "logs", __file__.split(sep)[-2])
+LOG_DIR = join(Path.home(), "logs", "smart-mini-crt-interface")
 ARTWORK_DIR = join(Path.home(), "crt_artwork")
 
 try:
