@@ -4,22 +4,26 @@ from io import BytesIO
 from json import dumps
 from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
 from os import getenv, mkdir
-from os.path import exists, join, sep
+from os.path import exists, join
 from pathlib import Path
-from tkinter.font import Font
 from re import compile as compile_regex
+from tkinter import Label, Canvas, CENTER, Tk
+from tkinter.font import Font
+
 from PIL import Image, ImageTk
+from dotenv import load_dotenv
 from pychromecast import get_listed_chromecasts
 from pychromecast.controllers.media import MediaStatusListener
 from pychromecast.controllers.receiver import CastStatusListener
 from requests import get
 from sys import stdout
-from tkinter import Label, Canvas, CENTER, Tk
+from time import sleep
+
+load_dotenv()
 
 #############
 # Constants #
 #############
-from time import sleep
 
 CRT_PIN = int(getenv("CRT_PIN", "-1"))
 BG_COLOR = "#000000"
