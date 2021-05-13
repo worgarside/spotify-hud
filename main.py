@@ -3,7 +3,7 @@ from html import unescape
 from io import BytesIO
 from json import dumps
 from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
-from os import getenv, mkdir
+from os import getenv, mkdir, environ
 from os.path import exists, join
 from pathlib import Path
 from re import compile as compile_regex
@@ -21,6 +21,34 @@ from time import sleep
 
 load_dotenv()
 
+
+LOG_DIR = join(Path.home(), "logs", "smart-mini-crt-interface")
+TODAY_STR = datetime.today().strftime("%Y-%m-%d")
+ARTWORK_DIR = join(Path.home(), "crt_artwork")
+
+for _dir in [join(Path.home(), "logs"), LOG_DIR, ARTWORK_DIR]:
+    if not exists(_dir):
+        mkdir(_dir)
+
+LOGGER = getLogger(__name__)
+LOGGER.setLevel(DEBUG)
+
+SH = StreamHandler(stdout)
+FH = FileHandler(f"{LOG_DIR}/{TODAY_STR}.log")
+
+FORMATTER = Formatter(
+    "%(asctime)s\t%(name)s\t[%(levelname)s]\t%(message)s", "%Y-%m-%d %H:%M:%S"
+)
+FH.setFormatter(FORMATTER)
+SH.setFormatter(FORMATTER)
+LOGGER.addHandler(FH)
+LOGGER.addHandler(SH)
+
+
+if getenv("DISPLAY", "") == "":
+    LOGGER.warning("No display found. Using :0.0")
+    environ.__setitem__("DISPLAY", ":0.0")
+
 #############
 # Constants #
 #############
@@ -33,11 +61,7 @@ MAX_WAIT_TIME_MS = 10000
 
 PATTERN = compile_regex("[^\w ]+")
 
-LOGGER = getLogger(__name__)
-LOGGER.setLevel(DEBUG)
-
-LOG_DIR = join(Path.home(), "logs", "smart-mini-crt-interface")
-ARTWORK_DIR = join(Path.home(), "crt_artwork")
+CAST_NAME = "Hi-fi System"
 
 try:
     from pigpio import pi as rasp_pi, OUTPUT
@@ -62,26 +86,6 @@ except (AttributeError, ModuleNotFoundError):
     def switch_off():
         LOGGER.debug("Switching display off (but not really)")
 
-
-# Change to the friendly name of your Chromecast
-CAST_NAME = "Hi-fi System"
-
-for _dir in [join(Path.home(), "logs"), LOG_DIR, ARTWORK_DIR]:
-    if not exists(_dir):
-        mkdir(_dir)
-
-TODAY_STR = datetime.today().strftime("%Y-%m-%d")
-
-SH = StreamHandler(stdout)
-FH = FileHandler(f"{LOG_DIR}/{TODAY_STR}.log")
-
-FORMATTER = Formatter(
-    "%(asctime)s\t%(name)s\t[%(levelname)s]\t%(message)s", "%Y-%m-%d %H:%M:%S"
-)
-FH.setFormatter(FORMATTER)
-SH.setFormatter(FORMATTER)
-LOGGER.addHandler(FH)
-LOGGER.addHandler(SH)
 
 ###########
 # Globals #
