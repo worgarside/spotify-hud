@@ -6,7 +6,7 @@ from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
 from os import getenv, mkdir, environ
 from os.path import exists, join
 from pathlib import Path
-from re import compile as compile_regex
+from re import compile as compile_regex, sub
 from tkinter import Label, Canvas, CENTER, Tk
 from tkinter.font import Font
 
@@ -127,8 +127,8 @@ class ChromecastMediaListener(MediaStatusListener):
             )[0].url
             if status.images
             else None,
-            "media_title": status.title,
-            "media_artist": status.artist,
+            "media_title": sub(r".mp3$", "", status.title or ""),
+            "media_artist": status.artist or "",
             "album_name": status.album_name,
         }
 
@@ -175,11 +175,17 @@ def update_display(payload):
         )
     ):
         mkdir(artist_dir)
-        LOGGER.info("Created artwork directory for `%s`", payload["media_artist"])
+        LOGGER.info(
+            "Created artwork directory for `%s`: `%s`",
+            payload["media_artist"],
+            artist_dir,
+        )
 
     artwork_path = join(
         artist_dir,
-        PATTERN.sub("", payload["album_name"]).lower().replace(" ", "_"),
+        PATTERN.sub("", payload["album_name"] or payload["media_title"])
+        .lower()
+        .replace(" ", "_"),
     )
 
     try:
