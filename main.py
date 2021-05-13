@@ -28,7 +28,6 @@ from time import sleep
 
 load_dotenv()
 
-
 LOG_DIR = join(Path.home(), "logs", "smart-mini-crt-interface")
 TODAY_STR = datetime.today().strftime("%Y-%m-%d")
 ARTWORK_DIR = join(Path.home(), "crt_artwork")
@@ -50,7 +49,6 @@ FH.setFormatter(FORMATTER)
 SH.setFormatter(FORMATTER)
 LOGGER.addHandler(FH)
 LOGGER.addHandler(SH)
-
 
 if getenv("DISPLAY", "") == "":
     LOGGER.warning("No display found. Using :0.0")
@@ -137,25 +135,32 @@ class ChromecastMediaListener(MediaStatusListener):
         if status.player_state in {
             MEDIA_PLAYER_STATE_PLAYING,
             MEDIA_PLAYER_STATE_PAUSED,
-        }:
-            switch_on()
-        elif status.player_state in {
             MEDIA_PLAYER_STATE_BUFFERING,
             MEDIA_PLAYER_STATE_IDLE,
+        }:
+            LOGGER.info(
+                "MediaStatus.player_state is `%s`. Switching on", status.player_state
+            )
+            switch_on()
+
+            if payload != self._previous_payload:
+                self._previous_payload = payload
+                update_display(payload)
+            else:
+                LOGGER.debug("No change to core payload")
+
+        elif status.player_state in {
             MEDIA_PLAYER_STATE_UNKNOWN,
         }:
+            LOGGER.info(
+                "MediaStatus.player_state is `%s`. Switching off", status.player_state
+            )
             switch_off()
         else:
             LOGGER.error(
                 "`MediaStatus.player_state` in unexpected stater: `%s`",
                 status.player_state,
             )
-
-        if payload != self._previous_payload:
-            self._previous_payload = payload
-            update_display(payload)
-        else:
-            LOGGER.debug("No change to core payload")
 
 
 def update_display(payload):
