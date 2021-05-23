@@ -1,4 +1,4 @@
-from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
+from logging import getLogger, DEBUG
 from os import getenv, environ
 from re import sub
 
@@ -15,27 +15,19 @@ from pychromecast.controllers.media import (
     MEDIA_PLAYER_STATE_UNKNOWN,
 )
 from pychromecast.controllers.receiver import CastStatusListener
-from sys import stdout
 from time import sleep
 
-from const import LOG_DIR, TODAY_STR
+from const import CONFIG_FILE, FH, SH, switch_on, switch_off, CAST_NAME
 from crt_tv import CrtTv
 
 load_dotenv()
 
 LOGGER = getLogger(__name__)
 LOGGER.setLevel(DEBUG)
-
-SH = StreamHandler(stdout)
-FH = FileHandler(f"{LOG_DIR}/{TODAY_STR}.log")
-
-FORMATTER = Formatter(
-    "%(asctime)s\t%(name)s\t[%(levelname)s]\t%(message)s", "%Y-%m-%d %H:%M:%S"
-)
-FH.setFormatter(FORMATTER)
-SH.setFormatter(FORMATTER)
 LOGGER.addHandler(FH)
 LOGGER.addHandler(SH)
+
+LOGGER.debug("Config file is `%s`", CONFIG_FILE)
 
 if (display_ev := getenv("DISPLAY")) in {None, "0.0"}:
     LOGGER.warning("No display found. Using :0.0")
@@ -46,32 +38,6 @@ else:
 #############
 # Constants #
 #############
-
-CAST_NAME = "Hi-fi System"
-
-try:
-    from pigpio import pi as rasp_pi, OUTPUT
-
-    pi = rasp_pi()
-    pi.set_mode(CrtTv.CRT_PIN, OUTPUT)
-
-    def switch_on():
-        LOGGER.debug("Switching display on")
-        pi.write(CrtTv.CRT_PIN, True)
-
-    def switch_off():
-        LOGGER.debug("Switching display off")
-        pi.write(CrtTv.CRT_PIN, False)
-
-
-except (AttributeError, ModuleNotFoundError):
-
-    def switch_on():
-        LOGGER.debug("Switching display on (but not really)")
-
-    def switch_off():
-        LOGGER.debug("Switching display off (but not really)")
-
 
 CRT = CrtTv()
 
@@ -182,23 +148,25 @@ def run_interface():
             chromecast = _chromecasts.pop()
             # Start socket client's worker thread and wait for initial status update
             chromecast.wait()
+
+            chromecast.media_controller.register_status_listener(
+                ChromecastMediaListener(chromecast.name, chromecast)
+            )
+
+            LOGGER.info("Chromecast connected and status listener registered")
+
+            chromecast.media_controller.update_status()
+
+            LOGGER.info("Status updated, starting TK mainloop")
         except Exception as exc:
             LOGGER.error(
                 "Error connecting to Chromecast: `%s - %s`",
                 type(exc).__name__,
                 exc.__str__(),
             )
+
+            chromecast = None
             sleep(10)
-
-    chromecast.media_controller.register_status_listener(
-        ChromecastMediaListener(chromecast.name, chromecast)
-    )
-
-    LOGGER.info("Chromecast connected and status listener registered")
-
-    chromecast.media_controller.update_status()
-
-    LOGGER.info("Status updated, starting TK mainloop")
 
     CRT.root.mainloop()
 

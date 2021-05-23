@@ -1,38 +1,29 @@
 from html import unescape
 from io import BytesIO
-from json import dumps
-from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
-from os import getenv, mkdir
+from json import dumps, load
+from logging import getLogger, DEBUG
+from os import mkdir
 from os.path import exists, join
+from pathlib import Path
+from re import compile as compile_regex
 from tkinter import Label, Canvas, CENTER, Tk
 from tkinter.font import Font
-from pathlib import Path
+
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
 from requests import get
-from sys import stdout
-from const import LOG_DIR, TODAY_STR
-from re import compile as compile_regex
+
+from const import CONFIG_FILE, FH, SH
 
 load_dotenv()
 
 LOGGER = getLogger(__name__)
 LOGGER.setLevel(DEBUG)
-
-SH = StreamHandler(stdout)
-FH = FileHandler(f"{LOG_DIR}/{TODAY_STR}.log")
-
-FORMATTER = Formatter(
-    "%(asctime)s\t%(name)s\t[%(levelname)s]\t%(message)s", "%Y-%m-%d %H:%M:%S"
-)
-FH.setFormatter(FORMATTER)
-SH.setFormatter(FORMATTER)
 LOGGER.addHandler(FH)
 LOGGER.addHandler(SH)
 
 
 class CrtTv:
-    CRT_PIN = int(getenv("CRT_PIN", "-1"))
     BG_COLOR = "#000000"
     STANDARD_ARGS = {"highlightthickness": 0, "bd": 0, "bg": BG_COLOR}
     CHAR_LIM = 31
@@ -195,6 +186,15 @@ class CrtTv:
         else:
             self.content_dict["coords"][k]["x"] = 0.5 * self.screen_width
             self.content_dict["widgets"][k].place(**self.content_dict["coords"][k])
+
+    def get_config(self, *, keys):
+        with open(CONFIG_FILE) as fin:
+            config = load(fin)
+
+        for key in [1, 2, 3]:
+            config = config.get(key, {})
+
+        return config
 
     @property
     def screen_width(self):
