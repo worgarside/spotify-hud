@@ -90,16 +90,16 @@ def get_config(*, keys):
     return config
 
 
-def switch_on():
-    if get_config(keys=["crt", "state"]) and PI:
+def switch_on(force_switch_on=False):
+    if force_switch_on or (get_config(keys=["crt", "state"]) and PI):
         _LOGGER.debug("Switching display on")
         PI.write(CRT_PIN, True)
     else:
         _LOGGER.debug("Switching display on (but not really)")
 
 
-def switch_off():
-    if not get_config(keys=["crt", "state"]) and PI:
+def switch_off(force_switch_on=False):
+    if force_switch_on or (not get_config(keys=["crt", "state"]) and PI):
         _LOGGER.debug("Switching display off")
         PI.write(CRT_PIN, False)
     else:

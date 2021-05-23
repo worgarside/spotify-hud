@@ -59,6 +59,7 @@ class ChromecastMediaListener(MediaStatusListener):
         self.cast = cast
 
         self._previous_payload = dict()
+        self._previous_state = None
 
     def new_media_status(self, status):
         payload = {
@@ -81,7 +82,7 @@ class ChromecastMediaListener(MediaStatusListener):
             LOGGER.info(
                 "MediaStatus.player_state is `%s`. Switching on", status.player_state
             )
-            switch_on()
+            switch_on(self._previous_state == MEDIA_PLAYER_STATE_UNKNOWN)
 
             if payload != self._previous_payload:
                 self._previous_payload = payload
@@ -108,12 +109,22 @@ class ChromecastMediaListener(MediaStatusListener):
             LOGGER.info(
                 "MediaStatus.player_state is `%s`. Switching off", status.player_state
             )
-            switch_off()
+            switch_off(
+                self._previous_state
+                in {
+                    MEDIA_PLAYER_STATE_PLAYING,
+                    MEDIA_PLAYER_STATE_PAUSED,
+                    MEDIA_PLAYER_STATE_BUFFERING,
+                    MEDIA_PLAYER_STATE_IDLE,
+                }
+            )
         else:
             LOGGER.error(
                 "`MediaStatus.player_state` in unexpected stater: `%s`",
                 status.player_state,
             )
+
+        self._previous_state = status.player_state
 
 
 def get_n_colors_from_image(img_path, n=15):
