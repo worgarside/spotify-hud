@@ -75,3 +75,31 @@ _LOGGER = getLogger(__name__)
 _LOGGER.setLevel(DEBUG)
 _LOGGER.addHandler(FH)
 _LOGGER.addHandler(SH)
+
+# ################### FUNCTIONS ################### #
+
+
+def get_config(*, keys):
+    with open(CONFIG_FILE) as fin:
+        config = load(fin)
+
+    for key in keys:
+        config = config.get(key, {})
+
+    return config
+
+
+def switch_on():
+    if get_config(keys=["crt", "state"]) and PI is not None:
+        LOGGER.debug("Switching display on")
+        PI.write(CRT_PIN, True)
+    else:
+        LOGGER.debug("Switching display on (but not really)")
+
+
+def switch_off():
+    if not get_config(keys=["crt", "state"]) and PI is not None:
+        LOGGER.debug("Switching display off")
+        PI.write(CRT_PIN, False)
+    else:
+        LOGGER.debug("Switching display off (but not really)")
