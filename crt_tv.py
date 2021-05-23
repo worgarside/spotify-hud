@@ -125,7 +125,7 @@ class CrtTv:
                 artist_dir,
             )
 
-        artwork_path = join(
+        self.artwork_path = join(
             artist_dir,
             self.PATTERN.sub("", payload["album_name"] or payload["media_title"])
             .lower()
@@ -133,21 +133,21 @@ class CrtTv:
         )
 
         try:
-            with open(artwork_path, "rb") as fin:
+            with open(self.artwork_path, "rb") as fin:
                 self.content_dict["images"]["tk_img"] = Image.open(BytesIO(fin.read()))
-            LOGGER.debug("Retrieved artwork from `%s`", artwork_path)
+            LOGGER.debug("Retrieved artwork from `%s`", self.artwork_path)
         except FileNotFoundError:
             artwork_bytes = get(payload["artwork_url"]).content
             self.content_dict["images"]["tk_img"] = Image.open(BytesIO(artwork_bytes))
 
-            with open(artwork_path, "wb") as fout:
+            with open(self.artwork_path, "wb") as fout:
                 fout.write(artwork_bytes)
 
             LOGGER.info(
                 "Saved artwork for `%s` by `%s` to `%s`",
                 payload["album_name"],
                 payload["media_artist"],
-                artwork_path,
+                self.artwork_path,
             )
         except Exception as exc:
             LOGGER.error(

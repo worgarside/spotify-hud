@@ -1,6 +1,8 @@
 from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
 from os import getenv, environ
 from re import sub
+from nanoleafapi import Nanoleaf, discovery, RED
+from PIL import Image
 
 from dotenv import load_dotenv
 from pychromecast import get_listed_chromecasts
@@ -71,6 +73,8 @@ except (AttributeError, ModuleNotFoundError):
 
 CRT = CrtTv()
 
+SHAPES = Nanoleaf(getenv("NANOLEAF_SHAPES_IP"))
+
 
 class ChromecastStatusListener(CastStatusListener):
     def __init__(self, name, cast):
@@ -114,6 +118,19 @@ class ChromecastMediaListener(MediaStatusListener):
             if payload != self._previous_payload:
                 self._previous_payload = payload
                 CRT.update_display(payload)
+
+                SHAPES.write_effect(
+                    {
+                        "command": "display",
+                        "animType": "random",
+                        "colorType": "HSB",
+                        "animData": None,
+                        "palette": get_n_colors_from_image(CRT.artwork_path),
+                        "transTime": {"minValue": 50, "maxValue": 100},
+                        "delayTime": {"minValue": 50, "maxValue": 100},
+                        "loop": True,
+                    }
+                )
             else:
                 LOGGER.debug("No change to core payload")
 
@@ -129,6 +146,25 @@ class ChromecastMediaListener(MediaStatusListener):
                 "`MediaStatus.player_state` in unexpected stater: `%s`",
                 status.player_state,
             )
+
+
+def get_n_colors_from_image(img_path, n=15):
+    pixels = Image.open(img_path).quantize(colors=n, method=0)
+
+    # pixels.show()
+
+    return [
+        {
+            "hue": color_tuple[0],
+            "saturation": int((color_tuple[1] * 100) / 255),
+            "brightness": int((color_tuple[2] * 100) / 255),
+        }
+        for count, color_tuple in sorted(
+            pixels.convert(mode="HSV").getcolors(),
+            key=lambda elem: elem[0],
+            reverse=True,
+        )
+    ][:n]
 
 
 def run_interface():
