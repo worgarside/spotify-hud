@@ -81,7 +81,7 @@ class ChromecastMediaListener(MediaStatusListener):
             LOGGER.info(
                 "MediaStatus.player_state is `%s`. Switching on", status.player_state
             )
-            CrtTv.switch_on()
+            CRT.switch_on()
 
             if payload != self._previous_payload:
                 self._previous_payload = payload
@@ -108,7 +108,7 @@ class ChromecastMediaListener(MediaStatusListener):
             LOGGER.info(
                 "MediaStatus.player_state is `%s`. Switching off", status.player_state
             )
-            CrtTv.switch_off()
+            CRT.switch_off()
         else:
             LOGGER.error(
                 "`MediaStatus.player_state` in unexpected stater: `%s`",
