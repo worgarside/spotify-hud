@@ -37,7 +37,7 @@ SH.setFormatter(FORMATTER)
 LOGGER.addHandler(FH)
 LOGGER.addHandler(SH)
 
-if (display_ev := getenv("DISPLAY")) is None:
+if (display_ev := getenv("DISPLAY")) in {None, "0.0"}:
     LOGGER.warning("No display found. Using :0.0")
     environ.__setitem__("DISPLAY", ":0.0")
 else:
@@ -75,7 +75,7 @@ except (AttributeError, ModuleNotFoundError):
 
 CRT = CrtTv()
 
-SHAPES = Nanoleaf(getenv("NANOLEAF_SHAPES_IP"))
+SHAPES = Nanoleaf(getenv("NANOLEAF_SHAPES_IP"), getenv("NANOLEAF_SHAPES_AUTH_TOKEN"))
 
 
 class ChromecastStatusListener(CastStatusListener):
