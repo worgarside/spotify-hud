@@ -59,7 +59,7 @@ class ChromecastMediaListener(MediaStatusListener):
         self.cast = cast
 
         self._previous_payload = dict()
-        self._previous_state = None
+        self._previous_state = MEDIA_PLAYER_STATE_UNKNOWN
 
     def new_media_status(self, status):
         payload = {
