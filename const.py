@@ -8,6 +8,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 from sys import stdout
 
+try:
+    from pigpio import pi as rasp_pi, OUTPUT
+except (AttributeError, ModuleNotFoundError):
+    rasp_pi = lambda *a, **kw: None
+    OUTPUT = None
+
 load_dotenv()
 
 # ################### CONSTANT VALUES ################### #
@@ -17,6 +23,9 @@ TODAY_STR = datetime.today().strftime("%Y-%m-%d")
 CRT_PIN = int(getenv("CRT_PIN", "-1"))
 
 CAST_NAME = "Hi-fi System"
+
+PI = rasp_pi()
+PI.set_mode(CRT_PIN, OUTPUT)
 
 # ################### DIRECTORIES / FILES ################### #
 
@@ -66,28 +75,3 @@ _LOGGER = getLogger(__name__)
 _LOGGER.setLevel(DEBUG)
 _LOGGER.addHandler(FH)
 _LOGGER.addHandler(SH)
-
-# ################### LOGGING ################### #
-
-try:
-    from pigpio import pi as rasp_pi, OUTPUT
-
-    PI = rasp_pi()
-    PI.set_mode(CRT_PIN, OUTPUT)
-
-    def switch_on():
-        _LOGGER.debug("Switching display on")
-        PI.write(CRT_PIN, True)
-
-    def switch_off():
-        _LOGGER.debug("Switching display off")
-        PI.write(CRT_PIN, False)
-
-
-except (AttributeError, ModuleNotFoundError):
-
-    def switch_on():
-        _LOGGER.debug("Switching display on (but not really)")
-
-    def switch_off():
-        _LOGGER.debug("Switching display off (but not really)")

@@ -17,7 +17,7 @@ from pychromecast.controllers.media import (
 from pychromecast.controllers.receiver import CastStatusListener
 from time import sleep
 
-from const import CONFIG_FILE, FH, SH, switch_on, switch_off, CAST_NAME
+from const import CONFIG_FILE, FH, SH, CAST_NAME
 from crt_tv import CrtTv
 
 load_dotenv()
@@ -81,7 +81,7 @@ class ChromecastMediaListener(MediaStatusListener):
             LOGGER.info(
                 "MediaStatus.player_state is `%s`. Switching on", status.player_state
             )
-            switch_on()
+            CrtTv.switch_on()
 
             if payload != self._previous_payload:
                 self._previous_payload = payload
@@ -108,7 +108,7 @@ class ChromecastMediaListener(MediaStatusListener):
             LOGGER.info(
                 "MediaStatus.player_state is `%s`. Switching off", status.player_state
             )
-            switch_off()
+            CrtTv.switch_off()
         else:
             LOGGER.error(
                 "`MediaStatus.player_state` in unexpected stater: `%s`",

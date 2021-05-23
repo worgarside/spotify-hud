@@ -13,7 +13,7 @@ from PIL import Image, ImageTk
 from dotenv import load_dotenv
 from requests import get
 
-from const import CONFIG_FILE, FH, SH
+from const import CONFIG_FILE, FH, SH, PI, CRT_PIN
 
 load_dotenv()
 
@@ -191,10 +191,24 @@ class CrtTv:
         with open(CONFIG_FILE) as fin:
             config = load(fin)
 
-        for key in [1, 2, 3]:
+        for key in keys:
             config = config.get(key, {})
 
         return config
+
+    def switch_on(self):
+        if self.get_config(keys=["crt", "state"]) and PI is not None:
+            LOGGER.debug("Switching display on")
+            PI.write(CRT_PIN, True)
+        else:
+            LOGGER.debug("Switching display on (but not really)")
+
+    def switch_off(self):
+        if not self.get_config(keys=["crt", "state"]) and PI is not None:
+            LOGGER.debug("Switching display off")
+            PI.write(CRT_PIN, False)
+        else:
+            LOGGER.debug("Switching display off (but not really)")
 
     @property
     def screen_width(self):
