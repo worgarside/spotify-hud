@@ -1,10 +1,10 @@
 from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
 from os import getenv, environ
 from re import sub
-from nanoleafapi import Nanoleaf, discovery, RED
-from PIL import Image
 
+from PIL import Image
 from dotenv import load_dotenv
+from nanoleafapi import Nanoleaf
 from pychromecast import get_listed_chromecasts
 from pychromecast.controllers.media import (
     MediaStatusListener,
@@ -37,9 +37,11 @@ SH.setFormatter(FORMATTER)
 LOGGER.addHandler(FH)
 LOGGER.addHandler(SH)
 
-if getenv("DISPLAY", "") == "":
+if (display_ev := getenv("DISPLAY")) is None:
     LOGGER.warning("No display found. Using :0.0")
     environ.__setitem__("DISPLAY", ":0.0")
+else:
+    LOGGER.debug("`DISPLAY` env var is set to: %s", display_ev)
 
 #############
 # Constants #
