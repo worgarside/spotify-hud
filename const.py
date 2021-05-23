@@ -90,10 +90,23 @@ def get_config(*, keys):
     return config
 
 
+def set_config(value, *, keys):
+    with open(CONFIG_FILE) as fin:
+        config = load(fin)
+
+    target_key = keys.pop()
+
+    for key in keys:
+        config = config.get(key, {})
+
+    config[target_key] = value
+
+
 def switch_on(force_switch_on=False):
     if force_switch_on or (get_config(keys=["crt", "state"]) and PI):
         _LOGGER.debug("Switching display on")
         PI.write(CRT_PIN, True)
+        set_config(True, keys=["crt", "state"])
     else:
         _LOGGER.debug("Switching display on (but not really)")
 
@@ -102,5 +115,6 @@ def switch_off(force_switch_on=False):
     if force_switch_on or (not get_config(keys=["crt", "state"]) and PI):
         _LOGGER.debug("Switching display off")
         PI.write(CRT_PIN, False)
+        set_config(False, keys=["crt", "state"])
     else:
         _LOGGER.debug("Switching display off (but not really)")
