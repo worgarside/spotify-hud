@@ -2,6 +2,7 @@ from json import load, dump
 from logging import getLogger, DEBUG
 
 from flask import Flask
+from os import getenv
 
 from const import CONFIG_FILE, FH, SH, switch_on, switch_off
 
@@ -65,4 +66,4 @@ def crt_toggle():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+    app.run(host="0.0.0.0", port=int(getenv("CRT_API_PORT", "5000")))
