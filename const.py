@@ -5,7 +5,10 @@ from os import mkdir, getenv
 from os.path import exists, join, abspath, dirname
 from pathlib import Path
 
+from dotenv import load_dotenv
 from sys import stdout
+
+load_dotenv()
 
 # ################### CONSTANT VALUES ################### #
 
