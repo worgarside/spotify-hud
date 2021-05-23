@@ -17,7 +17,7 @@ from pychromecast.controllers.media import (
 from pychromecast.controllers.receiver import CastStatusListener
 from time import sleep
 
-from const import CONFIG_FILE, FH, SH, CAST_NAME
+from const import CONFIG_FILE, FH, SH, CAST_NAME, switch_on, switch_off
 from crt_tv import CrtTv
 
 load_dotenv()

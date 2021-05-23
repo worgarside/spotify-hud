@@ -25,7 +25,8 @@ CRT_PIN = int(getenv("CRT_PIN", "-1"))
 CAST_NAME = "Hi-fi System"
 
 PI = rasp_pi()
-PI.set_mode(CRT_PIN, OUTPUT)
+if PI:
+    PI.set_mode(CRT_PIN, OUTPUT)
 
 # ################### DIRECTORIES / FILES ################### #
 
@@ -90,7 +91,7 @@ def get_config(*, keys):
 
 
 def switch_on():
-    if get_config(keys=["crt", "state"]) and PI is not None:
+    if get_config(keys=["crt", "state"]) and PI:
         LOGGER.debug("Switching display on")
         PI.write(CRT_PIN, True)
     else:
@@ -98,7 +99,7 @@ def switch_on():
 
 
 def switch_off():
-    if not get_config(keys=["crt", "state"]) and PI is not None:
+    if not get_config(keys=["crt", "state"]) and PI:
         LOGGER.debug("Switching display off")
         PI.write(CRT_PIN, False)
     else:
