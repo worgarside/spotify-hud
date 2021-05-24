@@ -1,3 +1,7 @@
+"""
+Module for holding all constants and functions to be used across the entire project
+"""
+
 from datetime import datetime
 from json import dump, load
 from logging import StreamHandler, FileHandler, Formatter, getLogger, DEBUG
@@ -30,9 +34,9 @@ if PI:
 
 # ################### DIRECTORIES / FILES ################### #
 
-LOG_DIR = join(Path.home(), "logs", "smart-mini-crt-interface")
+LOG_DIR = join(str(Path.home()), "logs", "smart-mini-crt-interface")
 
-for _dir in [join(Path.home(), "logs"), LOG_DIR]:
+for _dir in [join(str(Path.home()), "logs"), LOG_DIR]:
     if not exists(_dir):
         mkdir(_dir)
 
@@ -41,8 +45,8 @@ CONFIG_FILE = join(abspath(dirname(__file__)), "config.json")
 _DEFAULT_CONFIG = {"crt": {"state": None}, "nanoleafControl": {"state": None}}
 
 if not exists(CONFIG_FILE):
-    with open(CONFIG_FILE, "w") as fout:
-        dump(_DEFAULT_CONFIG, fout)
+    with open(CONFIG_FILE, "w") as _fout:
+        dump(_DEFAULT_CONFIG, _fout)
 else:
 
     def _add_keys_to_dict(input_dict, output_dict):
@@ -52,13 +56,13 @@ else:
             elif isinstance(v, dict):
                 _add_keys_to_dict(v, output_dict[k])
 
-    with open(CONFIG_FILE) as fin:
-        loaded_config = load(fin)
+    with open(CONFIG_FILE) as _fin:
+        loaded_config = load(_fin)
 
     _add_keys_to_dict(_DEFAULT_CONFIG, loaded_config)
 
-    with open(CONFIG_FILE, "w") as fout:
-        dump(loaded_config, fout)
+    with open(CONFIG_FILE, "w") as _fout:
+        dump(loaded_config, _fout)
 
 # ################### LOGGING ################### #
 
@@ -77,10 +81,22 @@ _LOGGER.setLevel(DEBUG)
 _LOGGER.addHandler(FH)
 _LOGGER.addHandler(SH)
 
+
 # ################### FUNCTIONS ################### #
 
 
 def get_config(*, keys):
+    """Get a config value from the local config file
+
+    Args:
+        keys (list): the keys to use when traversing the config dictionary
+
+    Returns:
+        bool: the value of the config option
+    """
+
+    _LOGGER.debug("Getting config for `%s`", ".".join(keys))
+
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
@@ -91,6 +107,15 @@ def get_config(*, keys):
 
 
 def set_config(value, *, keys):
+    """Sets a config value in the local config file
+
+    Args:
+        value (bool): the value to set the config option to
+        keys (list): the list of keys to traverse the config dict with
+    """
+
+    _LOGGER.debug("Setting config to `%s` for `%s`", value, ".".join(keys))
+
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
@@ -101,8 +126,17 @@ def set_config(value, *, keys):
 
     config[target_key] = value
 
+    with open(CONFIG_FILE, "w") as fout:
+        dump(config, fout)
+
 
 def switch_crt_on(force_switch_on=False):
+    """Switch the CRT on by setting the GPIO pin to HIGH
+
+    Args:
+        force_switch_on (bool): option to override the config option
+    """
+
     if force_switch_on or (get_config(keys=["crt", "state"]) and PI):
         _LOGGER.debug("Switching display on")
         PI.write(CRT_PIN, True)
@@ -111,8 +145,14 @@ def switch_crt_on(force_switch_on=False):
         _LOGGER.debug("Switching display on (but not really)")
 
 
-def switch_crt_off(force_switch_on=False):
-    if force_switch_on or (not get_config(keys=["crt", "state"]) and PI):
+def switch_crt_off(force_switch_off=False):
+    """Switch the CRT off by setting the GPIO pin to LOW
+
+    Args:
+        force_switch_off (bool): option to override the config option
+    """
+
+    if force_switch_off or (not get_config(keys=["crt", "state"]) and PI):
         _LOGGER.debug("Switching display off")
         PI.write(CRT_PIN, False)
         set_config(False, keys=["crt", "state"])

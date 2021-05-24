@@ -1,6 +1,10 @@
+"""
+This module contains the class for controlling the CRT TV GUI
+"""
+
 from html import unescape
 from io import BytesIO
-from json import dumps, load
+from json import dumps
 from logging import getLogger, DEBUG
 from os import mkdir
 from os.path import exists, join
@@ -13,7 +17,7 @@ from PIL import Image, ImageTk
 from dotenv import load_dotenv
 from requests import get
 
-from const import CONFIG_FILE, FH, SH, PI, CRT_PIN
+from const import FH, SH
 
 load_dotenv()
 
@@ -24,16 +28,20 @@ LOGGER.addHandler(SH)
 
 
 class CrtTv:
+    """CRT TV class ofr controlling the GUI (not the power state)"""
+
     BG_COLOR = "#000000"
     STANDARD_ARGS = {"highlightthickness": 0, "bd": 0, "bg": BG_COLOR}
     CHAR_LIM = 31
     MAX_WAIT_TIME_MS = 10000
-    ARTWORK_DIR = join(Path.home(), "crt_artwork")
-    PATTERN = compile_regex("[^\w ]+")
+    ARTWORK_DIR = join(str(Path.home()), "crt_artwork")
+    PATTERN = compile_regex(r"[^\w ]+")
 
     def __init__(self):
         if not exists(self.ARTWORK_DIR):
             mkdir(self.ARTWORK_DIR)
+
+        self.artwork_path = None
 
         self.root = Tk()
         self.root.attributes("-fullscreen", True)
@@ -101,6 +109,12 @@ class CrtTv:
         )
 
     def update_display(self, payload):
+        """Update the artwork and text on the GUI
+
+        Args:
+            payload (dict): the payload to use in updating the GUI
+        """
+
         LOGGER.info("Updating display with payload:\t%s", dumps(payload))
 
         if not exists(
@@ -140,7 +154,7 @@ class CrtTv:
                 payload["media_artist"],
                 self.artwork_path,
             )
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
                 "Unable to get artwork: `%s - %s`",
                 type(exc).__name__,
@@ -169,6 +183,13 @@ class CrtTv:
                     self.hscroll_label(k)
 
     def hscroll_label(self, k):
+        """Horizontally scroll a label on the GUI. Used when the text content is wider
+        than the available screen space
+
+        Args:
+            k (str): the key to use in finding the label to scroll
+        """
+
         self.content_dict["coords"][k]["x"] -= 2
 
         self.content_dict["coords"][k]["x"] = (
@@ -189,12 +210,24 @@ class CrtTv:
 
     @property
     def screen_width(self):
+        """
+        Returns:
+            int: the width of the CRT's screen
+        """
         return self.root.winfo_screenwidth()
 
     @property
     def screen_height(self):
+        """
+        Returns:
+            int: the height of the CRT's screen
+        """
         return self.root.winfo_screenheight()
 
     @property
     def artwork_size(self):
+        """
+        Returns:
+            int: the size of the artwork image on the screen in pixels
+        """
         return int(0.65 * self.screen_height)

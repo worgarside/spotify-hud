@@ -1,3 +1,7 @@
+"""
+Module for holding the main controller function(s) for controlling the GUI
+"""
+
 from logging import getLogger, DEBUG
 from os import getenv
 from re import sub
@@ -46,24 +50,48 @@ CRT = CrtTv()
 SHAPES = Nanoleaf(getenv("NANOLEAF_SHAPES_IP"), getenv("NANOLEAF_SHAPES_AUTH_TOKEN"))
 
 
+# pylint: disable=too-few-public-methods
 class ChromecastStatusListener(CastStatusListener):
-    def __init__(self, name, cast):
-        self.name = name
+    """Class for listening to the Chromecast status. Currently unused.
+
+    Args:
+        cast (Chromecast): the Chromecast being monitored
+    """
+
+    def __init__(self, cast):
         self.cast = cast
+        self.name = cast.name
 
     def new_cast_status(self, status):
-        pass
+        """Method executed when the status of the Chromecast changes
+
+        Args:
+            status (ChromecastStatus): the new status of the Chromecast
+        """
 
 
+# pylint: disable=too-few-public-methods
 class ChromecastMediaListener(MediaStatusListener):
-    def __init__(self, name, cast):
-        self.name = name
+    """Class for listening to the Chromecast media status
+
+    Args:
+        cast (Chromecast): the Chromecast being monitored
+    """
+
+    def __init__(self, cast):
         self.cast = cast
+        self.name = cast.name
 
         self._previous_payload = dict()
         self._previous_state = MEDIA_PLAYER_STATE_UNKNOWN
 
     def new_media_status(self, status):
+        """Method executed when the status of the Chromecast changes
+
+        Args:
+            status (MediaStatus): the new status of the Chromecast's media
+        """
+
         payload = {
             "artwork_url": sorted(
                 status.images, key=lambda img: img.height, reverse=True
@@ -131,9 +159,16 @@ class ChromecastMediaListener(MediaStatusListener):
 
 
 def get_n_colors_from_image(img_path, n=15):
-    pixels = Image.open(img_path).quantize(colors=n, method=0)
+    """Get the N most common colors from an image
 
-    # pixels.show()
+    Args:
+        img_path (str): the path to the image file
+        n (int): the number of colors to retrieve from the image
+
+    Returns:
+        list: a list of the N most common colors in an image in the HSB format
+    """
+    pixels = Image.open(img_path).quantize(colors=n, method=0)
 
     return [
         {
@@ -150,6 +185,8 @@ def get_n_colors_from_image(img_path, n=15):
 
 
 def run_interface():
+    """Setup function for creating necessary resources and listeners"""
+
     chromecast = None
     LOGGER.info("Connecting to Chromecast...")
 
@@ -164,7 +201,7 @@ def run_interface():
             chromecast.wait()
 
             chromecast.media_controller.register_status_listener(
-                ChromecastMediaListener(chromecast.name, chromecast)
+                ChromecastMediaListener(chromecast)
             )
 
             LOGGER.info("Chromecast connected and status listener registered")
@@ -172,7 +209,7 @@ def run_interface():
             chromecast.media_controller.update_status()
 
             LOGGER.info("Status updated, starting TK mainloop")
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
                 "Error connecting to Chromecast: `%s - %s`",
                 type(exc).__name__,

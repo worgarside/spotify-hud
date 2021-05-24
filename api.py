@@ -1,8 +1,12 @@
+"""
+This module contains the methods used in the API definition
+"""
+
 from json import load, dump
 from logging import getLogger, DEBUG
 
-from flask import Flask
 from os import getenv
+from flask import Flask
 
 from const import CONFIG_FILE, FH, SH, switch_crt_on, switch_crt_off, set_config
 
@@ -19,6 +23,10 @@ app.config["DEBUG"] = True
 
 @app.route("/crt/on", methods=["GET"])
 def crt_on():
+    """API endpoint for turning the CRT on"""
+
+    LOGGER.info("API hit on `/crt/on`")
+
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
@@ -34,6 +42,10 @@ def crt_on():
 
 @app.route("/crt/off", methods=["GET"])
 def crt_off():
+    """API endpoint for turning the CRT off"""
+
+    LOGGER.info("API hit on `/crt/off`")
+
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
@@ -49,6 +61,10 @@ def crt_off():
 
 @app.route("/crt/toggle", methods=["GET"])
 def crt_toggle():
+    """API endpoint for toggling the CRT power state"""
+
+    LOGGER.info("API hit on `/crt/toggle`")
+
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
@@ -67,6 +83,10 @@ def crt_toggle():
 
 @app.route("/nanoleaf-mirror/on", methods=["GET"])
 def nanoleaf_on():
+    """API endpoint for turning Nanoleaf artwork mirroring on"""
+
+    LOGGER.info("API hit on `/nanoleaf-mirror/on`")
+
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
@@ -82,6 +102,10 @@ def nanoleaf_on():
 
 @app.route("/nanoleaf-mirror/off", methods=["GET"])
 def nanoleaf_off():
+    """API endpoint for turning Nanoleaf artwork mirroring off"""
+
+    LOGGER.info("API hit on `/nanoleaf-mirror/off`")
+
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
@@ -97,6 +121,10 @@ def nanoleaf_off():
 
 @app.route("/nanoleaf-mirror/toggle", methods=["GET"])
 def nanoleaf_toggle():
+    """API endpoint for toggling Nanoleaf artwork mirroring"""
+
+    LOGGER.info("API hit on `/nanoleaf-mirror/toggle`")
+
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
@@ -110,7 +138,11 @@ def nanoleaf_toggle():
     else:
         set_config(False, keys=["nanoleafControl", "state"])
 
-    return f"""<p>Nanoleaf Control {"On" if config["nanoleafControl"]["state"] else "Off"}</p>"""
+    return (
+        "<p>Nanoleaf Control " + "On"
+        if config["nanoleafControl"]["state"]
+        else "Off" + "</p>"
+    )
 
 
 if __name__ == "__main__":
