@@ -121,10 +121,14 @@ def set_config(value, *, keys):
 
     target_key = keys.pop()
 
-    for key in keys:
-        config = config.get(key, {})
+    subconfig = None
+    for i, key in enumerate(keys):
+        if i == 0:
+            subconfig = config.get(key, {})
+        else:
+            subconfig = subconfig.get(key, {})
 
-    config[target_key] = value
+    (subconfig or config)[target_key] = value
 
     with open(CONFIG_FILE, "w") as fout:
         dump(config, fout)
