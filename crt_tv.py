@@ -28,7 +28,7 @@ LOGGER.addHandler(SH)
 
 
 class CrtTv:
-    """CRT TV class ofr controlling the GUI (not the power state)"""
+    """CRT TV class for controlling the GUI (not the power state)"""
 
     BG_COLOR = "#000000"
     STANDARD_ARGS = {"highlightthickness": 0, "bd": 0, "bg": BG_COLOR}
@@ -49,64 +49,61 @@ class CrtTv:
 
         crt_font = Font(family="Courier New", size=int(0.05 * self.screen_height))
 
-        self.content_dict = {
-            "images": {"tk_img": None, "artwork": ""},
-            "widgets": {
-                "canvas": Canvas(
-                    self.root,
-                    width=self.screen_width,
-                    height=self.screen_height,
-                    **self.STANDARD_ARGS,
-                )
+        self.images = {"tk_img": None, "artwork": ""}
+
+        self.widgets = {
+            "canvas": Canvas(
+                self.root,
+                width=self.screen_width,
+                height=self.screen_height,
+                **self.STANDARD_ARGS,
+            )
+        }
+
+        self.coords = {
+            "media_title": {
+                "x": 0.5 * self.screen_width,
+                "y": 0.8 * self.screen_height,
+                "anchor": CENTER,
             },
-            "coords": {
-                "media_title": {
-                    "x": 0.5 * self.screen_width,
-                    "y": 0.8 * self.screen_height,
-                    "anchor": CENTER,
-                },
-                "media_artist": {
-                    "x": 0.5 * self.screen_width,
-                    "y": 0.9 * self.screen_height,
-                    "anchor": CENTER,
-                },
+            "media_artist": {
+                "x": 0.5 * self.screen_width,
+                "y": 0.9 * self.screen_height,
+                "anchor": CENTER,
             },
         }
-        self.content_dict["widgets"]["canvas"].place(
+
+        self.widgets["canvas"].place(
             x=0, y=0, width=self.screen_width, height=self.screen_height
         )
 
-        self.content_dict["widgets"]["artwork"] = Label(
-            self.content_dict["widgets"]["canvas"], image="", **self.STANDARD_ARGS
+        self.widgets["artwork"] = Label(
+            self.widgets["canvas"], image="", **self.STANDARD_ARGS
         )
 
-        self.content_dict["widgets"]["media_title"] = Label(
-            self.content_dict["widgets"]["canvas"],
+        self.widgets["media_title"] = Label(
+            self.widgets["canvas"],
             text="",
             font=crt_font,
             fg="#ffffff",
             bg=self.BG_COLOR,
         )
 
-        self.content_dict["widgets"]["media_artist"] = Label(
-            self.content_dict["widgets"]["canvas"],
+        self.widgets["media_artist"] = Label(
+            self.widgets["canvas"],
             text="",
             font=crt_font,
             fg="#ffffff",
             bg=self.BG_COLOR,
         )
 
-        self.content_dict["widgets"]["artwork"].place(
+        self.widgets["artwork"].place(
             x=0.5 * self.screen_width,
             y=(0.5 * self.artwork_size) + (0.075 * self.screen_height),
             anchor=CENTER,
         )
-        self.content_dict["widgets"]["media_title"].place(
-            **self.content_dict["coords"]["media_title"]
-        )
-        self.content_dict["widgets"]["media_artist"].place(
-            **self.content_dict["coords"]["media_artist"]
-        )
+        self.widgets["media_title"].place(**self.coords["media_title"])
+        self.widgets["media_artist"].place(**self.coords["media_artist"])
 
     def update_display(self, payload):
         """Update the artwork and text on the GUI
@@ -139,11 +136,11 @@ class CrtTv:
 
         try:
             with open(self.artwork_path, "rb") as fin:
-                self.content_dict["images"]["tk_img"] = Image.open(BytesIO(fin.read()))
+                self.images["tk_img"] = Image.open(BytesIO(fin.read()))
             LOGGER.debug("Retrieved artwork from `%s`", self.artwork_path)
         except FileNotFoundError:
             artwork_bytes = get(payload["artwork_url"]).content
-            self.content_dict["images"]["tk_img"] = Image.open(BytesIO(artwork_bytes))
+            self.images["tk_img"] = Image.open(BytesIO(artwork_bytes))
 
             with open(self.artwork_path, "wb") as fout:
                 fout.write(artwork_bytes)
@@ -161,23 +158,19 @@ class CrtTv:
                 exc.__str__(),
             )
 
-        self.content_dict["images"]["tk_img"] = self.content_dict["images"][
-            "tk_img"
-        ].resize((self.artwork_size, self.artwork_size), Image.ANTIALIAS)
-        self.content_dict["images"]["artwork"] = ImageTk.PhotoImage(
-            self.content_dict["images"]["tk_img"]
+        self.images["tk_img"] = self.images["tk_img"].resize(
+            (self.artwork_size, self.artwork_size), Image.ANTIALIAS
         )
+        self.images["artwork"] = ImageTk.PhotoImage(self.images["tk_img"])
 
-        self.content_dict["widgets"]["artwork"].configure(
-            image=self.content_dict["images"]["artwork"]
-        )
+        self.widgets["artwork"].configure(image=self.images["artwork"])
 
         for k, v in payload.items():
-            if k in self.content_dict["widgets"]:
-                self.content_dict["widgets"][k].config(text=unescape(v))
-                if len(self.content_dict["widgets"][k]["text"]) > self.CHAR_LIM:
-                    self.content_dict["widgets"][k]["text"] = (
-                        "  " + self.content_dict["widgets"][k]["text"] + "  "
+            if k in self.widgets:
+                self.widgets[k].config(text=unescape(v))
+                if len(self.widgets[k]["text"]) > self.CHAR_LIM:
+                    self.widgets[k]["text"] = (
+                        "  " + self.widgets[k]["text"] + "  "
                     ) * 3
 
                     self.hscroll_label(k)
@@ -190,23 +183,22 @@ class CrtTv:
             k (str): the key to use in finding the label to scroll
         """
 
-        self.content_dict["coords"][k]["x"] -= 2
+        self.coords[k]["x"] -= 2
 
-        self.content_dict["coords"][k]["x"] = (
+        self.coords[k]["x"] = (
             0.5 * self.screen_width
-            if self.content_dict["coords"][k]["x"]
-            < (0.5 * self.screen_width)
-            - (self.content_dict["widgets"][k].winfo_width() / 3)
-            else self.content_dict["coords"][k]["x"]
+            if self.coords[k]["x"]
+            < (0.5 * self.screen_width) - (self.widgets[k].winfo_width() / 3)
+            else self.coords[k]["x"]
         )
 
-        self.content_dict["widgets"][k].place(**self.content_dict["coords"][k])
+        self.widgets[k].place(**self.coords[k])
 
-        if len(self.content_dict["widgets"][k]["text"]) > self.CHAR_LIM:
-            self.content_dict["widgets"]["canvas"].after(10, self.hscroll_label, k)
+        if len(self.widgets[k]["text"]) > self.CHAR_LIM:
+            self.widgets["canvas"].after(10, self.hscroll_label, k)
         else:
-            self.content_dict["coords"][k]["x"] = 0.5 * self.screen_width
-            self.content_dict["widgets"][k].place(**self.content_dict["coords"][k])
+            self.coords[k]["x"] = 0.5 * self.screen_width
+            self.widgets[k].place(**self.coords[k])
 
     @property
     def screen_width(self):
