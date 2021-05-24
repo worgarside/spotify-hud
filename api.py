@@ -110,7 +110,7 @@ def nanoleaf_toggle():
     else:
         set_config(False, keys=["nanoleafControl", "state"])
 
-    return f"""<p>Nanoleaf Control {"On" if config["crt"]["state"] else "Off"}</p>"""
+    return f"""<p>Nanoleaf Control {"On" if config["nanoleafControl"]["state"] else "Off"}</p>"""
 
 
 if __name__ == "__main__":
