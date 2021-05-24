@@ -4,7 +4,7 @@ from logging import getLogger, DEBUG
 from flask import Flask
 from os import getenv
 
-from const import CONFIG_FILE, FH, SH, switch_crt_on, switch_crt_off
+from const import CONFIG_FILE, FH, SH, switch_crt_on, switch_crt_off, set_config
 
 LOGGER = getLogger(__name__)
 LOGGER.setLevel(DEBUG)
@@ -75,7 +75,7 @@ def nanoleaf_on():
     with open(CONFIG_FILE, "w") as fout:
         dump(config, fout)
 
-    switch_crt_on()
+    set_config(True, keys=["nanoleafControl", "state"])
 
     return "<p>Nanoleaf Control On</p>"
 
@@ -90,9 +90,9 @@ def nanoleaf_off():
     with open(CONFIG_FILE, "w") as fout:
         dump(config, fout)
 
-    switch_crt_off()
+    set_config(False, keys=["nanoleafControl", "state"])
 
-    return "<p>CRT Off</p>"
+    return "<p>Nanoleaf Control Off</p>"
 
 
 @app.route("/nanoleaf-mirror/toggle", methods=["GET"])
@@ -106,11 +106,11 @@ def nanoleaf_toggle():
         dump(config, fout)
 
     if config["nanoleafControl"]["state"]:
-        switch_crt_on()
+        set_config(True, keys=["nanoleafControl", "state"])
     else:
-        switch_crt_off()
+        set_config(False, keys=["nanoleafControl", "state"])
 
-    return f"""<p>CRT {"On" if config["crt"]["state"] else "Off"}</p>"""
+    return f"""<p>Nanoleaf Control {"On" if config["crt"]["state"] else "Off"}</p>"""
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 from logging import getLogger, DEBUG
-from os import getenv, environ
+from os import getenv
 from re import sub
 
 from PIL import Image
@@ -17,7 +17,15 @@ from pychromecast.controllers.media import (
 from pychromecast.controllers.receiver import CastStatusListener
 from time import sleep
 
-from const import CONFIG_FILE, FH, SH, CAST_NAME, switch_crt_on, switch_crt_off
+from const import (
+    CONFIG_FILE,
+    FH,
+    SH,
+    CAST_NAME,
+    switch_crt_on,
+    switch_crt_off,
+    get_config,
+)
 from crt_tv import CrtTv
 
 load_dotenv()
@@ -28,12 +36,6 @@ LOGGER.addHandler(FH)
 LOGGER.addHandler(SH)
 
 LOGGER.debug("Config file is `%s`", CONFIG_FILE)
-
-if (display_ev := getenv("DISPLAY")) in {None, "0.0"}:
-    LOGGER.warning("No display found. Using :0.0")
-    environ.__setitem__("DISPLAY", ":0.0")
-else:
-    LOGGER.debug("`DISPLAY` env var is set to: %s", display_ev)
 
 #############
 # Constants #
@@ -88,18 +90,19 @@ class ChromecastMediaListener(MediaStatusListener):
                 self._previous_payload = payload
                 CRT.update_display(payload)
 
-                SHAPES.write_effect(
-                    {
-                        "command": "display",
-                        "animType": "random",
-                        "colorType": "HSB",
-                        "animData": None,
-                        "palette": get_n_colors_from_image(CRT.artwork_path),
-                        "transTime": {"minValue": 50, "maxValue": 100},
-                        "delayTime": {"minValue": 50, "maxValue": 100},
-                        "loop": True,
-                    }
-                )
+                if get_config(keys=["nanoleafControl", "state"]):
+                    SHAPES.write_effect(
+                        {
+                            "command": "display",
+                            "animType": "random",
+                            "colorType": "HSB",
+                            "animData": None,
+                            "palette": get_n_colors_from_image(CRT.artwork_path),
+                            "transTime": {"minValue": 50, "maxValue": 100},
+                            "delayTime": {"minValue": 50, "maxValue": 100},
+                            "loop": True,
+                        }
+                    )
             else:
                 LOGGER.debug("No change to core payload")
 
