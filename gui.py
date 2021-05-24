@@ -119,6 +119,9 @@ class ChromecastMediaListener(MediaStatusListener):
                 CRT.update_display(payload)
 
                 if get_config(keys=["nanoleafControl", "state"]):
+                    LOGGER.debug(
+                        "Sending colors for `%s` to Nanoleaf Shapes", status.album_name
+                    )
                     SHAPES.write_effect(
                         {
                             "command": "display",

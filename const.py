@@ -103,6 +103,8 @@ def get_config(*, keys):
     for key in keys:
         config = config.get(key, {})
 
+    _LOGGER.debug("Value is `%s`", config)
+
     return config
 
 
