@@ -175,7 +175,7 @@ def get_n_colors_from_image(img_path, n=15):
 
     return [
         {
-            "hue": color_tuple[0],
+            "hue": int((color_tuple[0] * 360) / 255),
             "saturation": int((color_tuple[1] * 100) / 255),
             "brightness": int((color_tuple[2] * 100) / 255),
         }
