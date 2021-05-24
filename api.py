@@ -100,7 +100,7 @@ def nanoleaf_toggle():
     with open(CONFIG_FILE) as fin:
         config = load(fin)
 
-    config["nanoleafControl"]["state"] = not config["crt"]["state"]
+    config["nanoleafControl"]["state"] = not config["nanoleafControl"]["state"]
 
     with open(CONFIG_FILE, "w") as fout:
         dump(config, fout)
