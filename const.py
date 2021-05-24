@@ -36,7 +36,7 @@ for _dir in [join(Path.home(), "logs"), LOG_DIR]:
     if not exists(_dir):
         mkdir(_dir)
 
-CONFIG_FILE = join(abspath(dirname(__file__)), "../config.json")
+CONFIG_FILE = join(abspath(dirname(__file__)), "config.json")
 
 _DEFAULT_CONFIG = {"crt": {"state": None}, "nanoleafControl": {"state": None}}
 
