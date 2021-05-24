@@ -2,12 +2,14 @@
 Module for holding the main controller function(s) for controlling the GUI
 """
 
+from asyncio import run
 from logging import getLogger, DEBUG
 from os import getenv
 from re import sub
 
 from PIL import Image
 from dotenv import load_dotenv
+from kasa import SmartPlug
 from nanoleafapi import Nanoleaf
 from pychromecast import get_listed_chromecasts
 from pychromecast.controllers.media import (
@@ -48,6 +50,7 @@ LOGGER.debug("Config file is `%s`", CONFIG_FILE)
 CRT = CrtTv()
 
 SHAPES = Nanoleaf(getenv("NANOLEAF_SHAPES_IP"), getenv("NANOLEAF_SHAPES_AUTH_TOKEN"))
+HIFI_AMP = SmartPlug(getenv("HIFI_AMP_KASA_IP"))
 
 
 # pylint: disable=too-few-public-methods
@@ -113,6 +116,8 @@ class ChromecastMediaListener(MediaStatusListener):
                 "MediaStatus.player_state is `%s`. Switching on", status.player_state
             )
             switch_crt_on(self._previous_state == MEDIA_PLAYER_STATE_UNKNOWN)
+
+            run(HIFI_AMP.turn_on())
 
             if payload != self._previous_payload:
                 self._previous_payload = payload
